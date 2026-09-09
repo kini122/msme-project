@@ -59,7 +59,7 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
 
   private async performLiveUdyamCall(udyamNumber: string): Promise<any> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s overall timeout
+    const timeoutId = setTimeout(() => controller.abort(), 8500); // 8.5s overall timeout for Vercel
 
     try {
       const taskId = `task-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -103,9 +103,9 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
       // Poll the task status endpoint for completed results
       const pollUrl = `https://${this.apiHost}/v3/tasks?request_id=${encodeURIComponent(reqId)}`;
 
-      for (let attempt = 0; attempt < 6; attempt++) {
-        // Wait 1.5s between polls for the KYC registry to return official record
-        await new Promise((r) => setTimeout(r, 1500));
+      for (let attempt = 0; attempt < 4; attempt++) {
+        // Wait 1.2s between polls for the KYC registry to return official record
+        await new Promise((r) => setTimeout(r, 1200));
 
         try {
           const pollRes = await fetch(pollUrl, {
