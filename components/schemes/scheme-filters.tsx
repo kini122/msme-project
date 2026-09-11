@@ -27,21 +27,14 @@ const COMMON_MYSCHEME_CATEGORIES = [
 ];
 
 const COMMON_STATES = [
-  'All',
-  'Andhra Pradesh',
-  'Bihar',
-  'Delhi',
-  'Gujarat',
-  'Haryana',
-  'Karnataka',
   'Kerala',
-  'Madhya Pradesh',
-  'Maharashtra',
-  'Odisha',
-  'Punjab',
-  'Rajasthan',
+  'All',
+  'Karnataka',
   'Tamil Nadu',
-  'Telangana',
+  'Andhra Pradesh',
+  'Maharashtra',
+  'Gujarat',
+  'Delhi',
   'Uttar Pradesh',
   'West Bengal',
 ];

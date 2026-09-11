@@ -5,6 +5,8 @@ import { Company } from '@/types/company';
 import { SchemeMatch } from '@/types/matching';
 import { MatchCard } from '@/components/matching/match-card';
 import { DisclaimerBanner } from '@/components/ui/disclaimer-banner';
+import { CompanyFormModal } from '@/components/companies/company-form-modal';
+import { useAppData } from '@/lib/store/app-data-context';
 import { formatINR } from '@/lib/formatters/currency';
 import { formatDate } from '@/lib/formatters/date';
 import {
@@ -31,20 +33,35 @@ import {
   ExternalLink,
   Briefcase,
   Layers,
+  Edit3,
+  Award,
+  Leaf,
+  Users,
+  CreditCard,
 } from 'lucide-react';
 
 interface CompanyProfileProps {
   company: Company;
   matches: SchemeMatch[];
+  onCompanyUpdate?: (updated: Company) => void;
 }
 
-export function CompanyProfile({ company, matches }: CompanyProfileProps) {
+export function CompanyProfile({ company, matches, onCompanyUpdate }: CompanyProfileProps) {
+  const { updateCompany } = useAppData();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const handleSaveEdited = (updated: Company) => {
+    updateCompany(updated);
+    if (onCompanyUpdate) {
+      onCompanyUpdate(updated);
+    }
   };
 
   const eligibleMatches = matches.filter(
@@ -92,7 +109,7 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
             <div className="flex items-center gap-2.5 flex-wrap">
               {getClassificationBadge(company.classification)}
               <span className="text-xs px-2.5 py-1 rounded bg-slate-100 text-slate-700 font-medium">
-                {company.sector || 'General Industry'}
+                {company.sector || 'Food & Agro Processing'}
               </span>
               <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
                 <ShieldCheck className="w-3 h-3 text-emerald-600" />
@@ -100,9 +117,20 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
               </span>
             </div>
 
-            <h2 className="text-2xl font-bold font-heading text-slate-900 tracking-tight">
-              {company.companyName}
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold font-heading text-slate-900 tracking-tight">
+                {company.companyName}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-semibold transition"
+                title="Edit enterprise attributes and custom KPIs"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-blue-600" />
+                <span>Edit / Enrich KPIs</span>
+              </button>
+            </div>
 
             <div className="flex items-center gap-4 text-xs text-slate-500 font-mono flex-wrap">
               <div className="flex items-center gap-1.5">
@@ -143,17 +171,47 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
               <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
                 Annual Turnover
               </span>
-              <span className="text-base font-bold font-mono text-slate-900">
-                {formatINR(company.turnover)}
-              </span>
+              {company.turnover != null && company.turnover > 0 ? (
+                <span className="text-base font-bold font-mono text-slate-900">
+                  {formatINR(company.turnover)}
+                </span>
+              ) : (
+                <div className="mt-0.5">
+                  <span className="text-xs font-normal text-slate-400 italic block">
+                    Pending Data Entry
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono block">
+                    {company.classification === 'Micro'
+                      ? 'Micro Ceiling: ≤ ₹5 Cr'
+                      : company.classification === 'Small'
+                      ? 'Small Ceiling: ≤ ₹50 Cr'
+                      : 'Medium Ceiling: ≤ ₹250 Cr'}
+                  </span>
+                </div>
+              )}
             </div>
             <div>
               <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
                 P&M Investment
               </span>
-              <span className="text-base font-bold font-mono text-slate-900">
-                {formatINR(company.investment)}
-              </span>
+              {company.investment != null && company.investment > 0 ? (
+                <span className="text-base font-bold font-mono text-slate-900">
+                  {formatINR(company.investment)}
+                </span>
+              ) : (
+                <div className="mt-0.5">
+                  <span className="text-xs font-normal text-slate-400 italic block">
+                    Pending Data Entry
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono block">
+                    {company.classification === 'Micro'
+                      ? 'Micro Ceiling: ≤ ₹1 Cr'
+                      : company.classification === 'Small'
+                      ? 'Small Ceiling: ≤ ₹10 Cr'
+                      : 'Medium Ceiling: ≤ ₹50 Cr'}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -165,7 +223,9 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
               NIC Activity Code:
             </span>
             <span className="text-slate-800 font-medium font-mono">
-              {company.nicCode || 'Not specified'}
+              {company.nicCode || (
+                <span className="text-slate-400 italic font-normal">Pending Data Entry</span>
+              )}
             </span>
           </div>
 
@@ -177,7 +237,7 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
               <MapPin className="w-3.5 h-3.5 text-slate-400" />
               {company.state
                 ? `${company.district ? `${company.district}, ` : ''}${company.state}`
-                : 'N/A'}
+                : 'Kerala'}
             </span>
           </div>
 
@@ -186,7 +246,107 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
               District Industries Centre (DIC):
             </span>
             <span className="text-slate-800 font-medium truncate block">
-              {company.dicName || `DIC ${company.district || 'Regional Directorate'}`}
+              {company.dicName || `District Industries Centre (DIC), ${company.district || 'Ernakulam'}`}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Enriched Business & Scheme Intelligence KPIs Card */}
+      <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-subtle space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-600" />
+            <h3 className="font-heading font-bold text-sm text-slate-900">
+              Enriched Operational & Scheme Eligibility KPIs
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsEditModalOpen(true)}
+            className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
+          >
+            <Edit3 className="w-3 h-3" />
+            <span>Configure KPIs</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+          {/* KPI 1: Export */}
+          <div className="p-3 bg-slate-50 border border-slate-150 rounded-lg space-y-1">
+            <div className="flex items-center gap-1.5 text-slate-500 font-semibold text-[11px]">
+              <Globe className="w-3.5 h-3.5 text-blue-600" />
+              <span>Export Share</span>
+            </div>
+            <span className="font-mono text-sm font-bold text-slate-900 block">
+              {company.kpis?.isExporter
+                ? `${company.kpis.exportTurnoverPercentage || 0}% Export`
+                : 'Domestic Only'}
+            </span>
+            <span className="text-[10px] text-slate-400 block">
+              {company.kpis?.isExporter ? 'EPCG / MPEDA Eligible' : 'No export subsidies'}
+            </span>
+          </div>
+
+          {/* KPI 2: ZED / Quality */}
+          <div className="p-3 bg-slate-50 border border-slate-150 rounded-lg space-y-1">
+            <div className="flex items-center gap-1.5 text-slate-500 font-semibold text-[11px]">
+              <Award className="w-3.5 h-3.5 text-amber-600" />
+              <span>ZED Quality</span>
+            </div>
+            <span className="font-mono text-sm font-bold text-slate-900 block">
+              {company.kpis?.zedCertification && company.kpis.zedCertification !== 'None'
+                ? `ZED ${company.kpis.zedCertification}`
+                : company.kpis?.isoCertified
+                ? 'ISO Certified'
+                : 'Uncertified'}
+            </span>
+            <span className="text-[10px] text-slate-400 block">
+              {company.kpis?.zedCertification !== 'None' ? '85% Grant Eligible' : 'Standard Norms'}
+            </span>
+          </div>
+
+          {/* KPI 3: Green Energy */}
+          <div className="p-3 bg-slate-50 border border-slate-150 rounded-lg space-y-1">
+            <div className="flex items-center gap-1.5 text-slate-500 font-semibold text-[11px]">
+              <Leaf className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Clean Energy</span>
+            </div>
+            <span className="font-mono text-sm font-bold text-slate-900 block">
+              {company.kpis?.greenEnergyAdoption ? 'Solar Adopted' : 'Standard Grid'}
+            </span>
+            <span className="text-[10px] text-slate-400 block">
+              {company.kpis?.greenEnergyAdoption ? 'PM Surya / BEE Eligible' : 'No clean grant'}
+            </span>
+          </div>
+
+          {/* KPI 4: Credit Needs */}
+          <div className="p-3 bg-slate-50 border border-slate-150 rounded-lg space-y-1">
+            <div className="flex items-center gap-1.5 text-slate-500 font-semibold text-[11px]">
+              <CreditCard className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Credit Proposal</span>
+            </div>
+            <span className="font-mono text-sm font-bold text-slate-900 block">
+              {company.kpis?.creditRequirement
+                ? formatINR(company.kpis.creditRequirement)
+                : 'Standard Limit'}
+            </span>
+            <span className="text-[10px] text-slate-400 block">CGTMSE Guarantee</span>
+          </div>
+
+          {/* KPI 5: Social / Workforce */}
+          <div className="p-3 bg-slate-50 border border-slate-150 rounded-lg space-y-1">
+            <div className="flex items-center gap-1.5 text-slate-500 font-semibold text-[11px]">
+              <Users className="w-3.5 h-3.5 text-purple-600" />
+              <span>Inclusion & Scale</span>
+            </div>
+            <span className="font-mono text-sm font-bold text-slate-900 block">
+              {company.kpis?.womenOwnershipPercentage
+                ? `${company.kpis.womenOwnershipPercentage}% Women`
+                : `${company.kpis?.employeeCount || 20} Staff`}
+            </span>
+            <span className="text-[10px] text-slate-400 block">
+              {company.kpis?.womenOwnershipPercentage ? 'Stand-Up India' : 'MSME Workforce'}
             </span>
           </div>
         </div>
@@ -194,13 +354,23 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
 
       {/* Statutory Contact Details & Executive Dossier Cards */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-base font-bold font-heading text-slate-900">
-            Enterprise Statutory & Communication Dossier
-          </h3>
-          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-150">
-            Verified Statutory Profile
-          </span>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold font-heading text-slate-900">
+              Enterprise Statutory & Communication Dossier
+            </h3>
+            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-150">
+              Verified Statutory Profile
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsEditModalOpen(true)}
+            className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
+          >
+            <Edit3 className="w-3 h-3" />
+            <span>Edit Contacts</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -222,7 +392,9 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
               <div>
                 <span className="text-slate-400 block text-[11px] mb-0.5">Promoter / Director:</span>
                 <span className="text-slate-900 font-semibold text-sm block">
-                  {company.promoterName || 'Authorized Director'}
+                  {company.promoterName || (
+                    <span className="text-slate-400 italic font-normal text-xs">Pending Data Entry</span>
+                  )}
                 </span>
                 <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
                   {company.designation || 'Managing Director'}
@@ -234,13 +406,17 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
                 <div className="flex items-center justify-between gap-2 p-2 bg-slate-50 border border-slate-150 rounded">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <a
-                      href={`mailto:${company.email}`}
-                      className="text-primary hover:underline font-mono text-xs truncate"
-                      title={company.email}
-                    >
-                      {company.email || 'corporate@msme-registry.in'}
-                    </a>
+                    {company.email ? (
+                      <a
+                        href={`mailto:${company.email}`}
+                        className="text-primary hover:underline font-mono text-xs truncate"
+                        title={company.email}
+                      >
+                        {company.email}
+                      </a>
+                    ) : (
+                      <span className="text-slate-400 italic text-xs">Pending Data Entry</span>
+                    )}
                   </div>
                   {company.email && (
                     <button
@@ -264,14 +440,18 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
                   <div className="flex items-center justify-between text-xs p-1.5 rounded bg-slate-50 border border-slate-100">
                     <div className="flex items-center gap-1.5">
                       <Phone className="w-3 h-3 text-slate-400" />
-                      <span className="text-slate-700 font-mono">{company.phone || '+91 22 2847 4920'}</span>
+                      <span className="text-slate-700 font-mono">
+                        {company.phone || <span className="text-slate-400 italic font-sans font-normal">Pending Entry</span>}
+                      </span>
                     </div>
                     <span className="text-[10px] text-slate-400 uppercase font-semibold">Landline</span>
                   </div>
                   <div className="flex items-center justify-between text-xs p-1.5 rounded bg-slate-50 border border-slate-100">
                     <div className="flex items-center gap-1.5">
                       <PhoneCall className="w-3 h-3 text-slate-400" />
-                      <span className="text-slate-700 font-mono">{company.mobile || '+91 98401 28942'}</span>
+                      <span className="text-slate-700 font-mono">
+                        {company.mobile || <span className="text-slate-400 italic font-sans font-normal">Pending Entry</span>}
+                      </span>
                     </div>
                     <span className="text-[10px] text-slate-400 uppercase font-semibold">Direct Mobile</span>
                   </div>
@@ -314,7 +494,7 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
               <div>
                 <span className="text-slate-400 block text-[11px] mb-0.5">Principal Operating Address:</span>
                 <p className="text-slate-800 font-medium leading-relaxed bg-slate-50 p-2.5 rounded border border-slate-150">
-                  {company.address || `${company.district || 'Pune'}, ${company.state || 'Maharashtra'}, India`}
+                  {company.address || `${company.district || 'Ernakulam'}, ${company.state || 'Kerala'}, India`}
                 </p>
               </div>
 
@@ -322,7 +502,7 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
                 <span className="text-slate-400 block text-[11px] mb-0.5">Industrial Zone / Cluster:</span>
                 <span className="text-slate-800 font-semibold flex items-center gap-1.5">
                   <Layers className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span>{company.industrialZone || 'Integrated Industrial Development Estate'}</span>
+                  <span>{company.industrialZone || `${company.district || 'Ernakulam'} KINFRA Industrial Park`}</span>
                 </span>
               </div>
 
@@ -330,21 +510,21 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
                 <div>
                   <span className="text-slate-400 block text-[11px] mb-0.5">District / State:</span>
                   <span className="text-slate-800 font-medium">
-                    {company.district ? `${company.district}, ` : ''}{company.state || 'N/A'}
+                    {company.district ? `${company.district}, ` : ''}{company.state || 'Kerala'}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[11px] mb-0.5">Postal PIN Code:</span>
                   <span className="text-slate-800 font-mono font-semibold">
-                    {company.pinCode || '400001'}
+                    {company.pinCode || <span className="text-slate-400 italic font-sans font-normal">Pending</span>}
                   </span>
                 </div>
               </div>
 
               <div className="pt-2 border-t border-slate-100">
-                <span className="text-slate-400 block text-[11px] mb-0.5">State Industries Directorate:</span>
+                <span className="text-slate-400 block text-[11px] mb-0.5">Kerala Industries Directorate:</span>
                 <span className="text-slate-700 font-medium text-[11px]">
-                  {company.dicName || `District Industries Centre, ${company.district || 'Headquarters'}`}
+                  {company.dicName || `District Industries Centre, ${company.district || 'Ernakulam'}`}
                 </span>
               </div>
             </div>
@@ -369,11 +549,13 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
                 <span className="text-slate-400 block text-[11px] mb-0.5">GSTIN Registration:</span>
                 <div className="flex items-center justify-between p-2 bg-slate-50 border border-slate-150 rounded">
                   <span className="font-mono font-bold text-slate-900 text-xs tracking-wider">
-                    {company.gstin || '27AAACB1294F1Z5'}
+                    {company.gstin || <span className="text-slate-400 italic font-sans font-normal">Pending Data Entry</span>}
                   </span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    ACTIVE
-                  </span>
+                  {company.gstin && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      ACTIVE
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -381,13 +563,13 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
                 <div>
                   <span className="text-slate-400 block text-[11px] mb-0.5">PAN Card Number:</span>
                   <span className="font-mono font-bold text-slate-800 text-xs block">
-                    {company.panNumber || 'AAACB1294F'}
+                    {company.panNumber || <span className="text-slate-400 italic font-sans font-normal">Pending</span>}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[11px] mb-0.5">Corporate ID / CIN:</span>
                   <span className="font-mono text-slate-800 text-[11px] font-medium block truncate" title={company.cinNumber}>
-                    {company.cinNumber || 'U28910MH2021PTC359218'}
+                    {company.cinNumber || <span className="text-slate-400 italic font-sans font-normal">Pending</span>}
                   </span>
                 </div>
               </div>
@@ -397,7 +579,7 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
                 <div className="flex items-start gap-1.5 text-xs text-slate-800 bg-slate-50 p-2 rounded border border-slate-150">
                   <Landmark className="w-3.5 h-3.5 text-slate-500 mt-0.5 shrink-0" />
                   <span className="font-medium text-[11px] leading-tight">
-                    {company.bankBranch || 'State Bank of India, SME Commercial Banking Hub'}
+                    {company.bankBranch || <span className="text-slate-400 italic font-normal">Pending Data Entry</span>}
                   </span>
                 </div>
               </div>
@@ -426,7 +608,7 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Deterministic statutory evaluation against Central and State government schemes
+              Statutory and eligibility evaluation across Central and Kerala State government schemes
             </p>
           </div>
         </div>
@@ -447,7 +629,7 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
               No High-Relevance Scheme Matches Found
             </h4>
             <p className="text-xs text-slate-400 mt-1">
-              Review unmatched schemes below to inspect specific rule boundary criteria.
+              Review unmatched schemes below or click "Edit / Enrich KPIs" to configure export, clean energy, or ZED criteria.
             </p>
           </div>
         )}
@@ -466,6 +648,15 @@ export function CompanyProfile({ company, matches }: CompanyProfileProps) {
           </div>
         )}
       </div>
+
+      {/* Edit / Enrich Modal */}
+      <CompanyFormModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveEdited}
+        initialCompany={company}
+        mode="edit"
+      />
     </div>
   );
 }

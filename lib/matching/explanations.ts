@@ -10,6 +10,12 @@ export function generateExplanation(
   scheme: Scheme
 ): string {
   switch (key) {
+    case 'enterprise_scope':
+      if (state === 'pass') {
+        return 'Scheme provides commercial enterprise, statutory capital subsidy, or industrial assistance.';
+      }
+      return 'Scheme is targeted for individual citizen / student / academic welfare, not applicable to commercial MSME enterprises.';
+
     case 'classification':
       if (state === 'pass') {
         return `Enterprise classification "${company.classification}" is supported by scheme (${scheme.classifications.join(', ')}).`;
@@ -36,10 +42,10 @@ export function generateExplanation(
         if (!scheme.states || scheme.states.length === 0) {
           return 'Pan-India Central Scheme with no state restrictions.';
         }
-        return `Company registered state "${company.state}" matches scheme jurisdiction.`;
+        return `Company registered in "${company.state || 'Kerala'}" matches scheme jurisdiction.`;
       }
       if (state === 'fail') {
-        return `Scheme restricted to ${scheme.states.join(', ')}; company is registered in "${company.state || 'Unknown'}".`;
+        return `Scheme restricted to ${scheme.states.join(', ')}; company is registered in "${company.state || 'Kerala'}".`;
       }
       return 'State jurisdiction is missing in company profile.';
 
@@ -48,7 +54,10 @@ export function generateExplanation(
         if (!scheme.maxTurnover && !scheme.minTurnover) {
           return 'No strict turnover ceiling or floor specified for this scheme.';
         }
-        return `Reported turnover ${formatINR(company.turnover)} complies with threshold (Max: ${formatINR(scheme.maxTurnover)}).`;
+        if (company.turnover != null) {
+          return `Reported turnover ${formatINR(company.turnover)} complies with threshold (Max: ${formatINR(scheme.maxTurnover)}).`;
+        }
+        return `Turnover pending audit entry. Enterprise verified as ${company.classification || 'MSME'} class (statutory ceiling ≤ ${company.classification === 'Micro' ? '₹5 Cr' : company.classification === 'Small' ? '₹50 Cr' : '₹250 Cr'}).`;
       }
       if (state === 'fail') {
         if (scheme.maxTurnover && company.turnover && company.turnover > scheme.maxTurnover) {
@@ -59,14 +68,17 @@ export function generateExplanation(
         }
         return 'Turnover does not meet scheme financial parameters.';
       }
-      return 'Turnover data is missing or not provided by live source.';
+      return 'Turnover pending audit entry. Use "Edit / Enrich KPIs" to input client financial figures.';
 
     case 'investment':
       if (state === 'pass') {
         if (!scheme.maxInvestment && !scheme.minInvestment) {
           return 'No plant & machinery investment ceiling configured.';
         }
-        return `Investment ${formatINR(company.investment)} is within scheme limits (Max: ${formatINR(scheme.maxInvestment)}).`;
+        if (company.investment != null) {
+          return `Investment ${formatINR(company.investment)} is within scheme limits (Max: ${formatINR(scheme.maxInvestment)}).`;
+        }
+        return `P&M investment pending audit entry. Enterprise verified as ${company.classification || 'MSME'} class (statutory ceiling ≤ ${company.classification === 'Micro' ? '₹1 Cr' : company.classification === 'Small' ? '₹10 Cr' : '₹50 Cr'}).`;
       }
       if (state === 'fail') {
         if (scheme.maxInvestment && company.investment && company.investment > scheme.maxInvestment) {
@@ -77,7 +89,34 @@ export function generateExplanation(
         }
         return 'Investment in Plant & Machinery does not meet scheme threshold.';
       }
-      return 'Plant & Machinery investment value is unavailable.';
+      return 'Plant & Machinery investment value pending audit entry.';
+
+    case 'export_kpi':
+      if (state === 'pass') {
+        return `Active exporter status confirmed (${company.kpis?.exportTurnoverPercentage || 0}% export turnover share).`;
+      }
+      return 'Enterprise is not designated as an active exporter in company KPIs.';
+
+    case 'green_kpi':
+      if (state === 'pass') {
+        return 'Green energy / rooftop solar adoption verified.';
+      }
+      return 'Clean energy / solar adoption is not configured in enterprise KPIs.';
+
+    case 'tech_quality_kpi':
+      if (state === 'pass') {
+        return `ZED / Quality certification verified (${company.kpis?.zedCertification || 'Standard Compliant'}).`;
+      }
+      return 'ZED certification or quality upgrade investment required.';
+
+    case 'credit_kpi':
+      return 'Debt and credit guarantee facility applicable.';
+
+    case 'social_kpi':
+      if (state === 'pass') {
+        return `Inclusive ownership requirements met (${company.kpis?.womenOwnershipPercentage ? `${company.kpis.womenOwnershipPercentage}% Women` : `${company.kpis?.scStOwnershipPercentage}% SC/ST`}).`;
+      }
+      return 'Scheme requires majority Women or SC/ST promoter ownership (≥51%).';
 
     default:
       return 'Criterion evaluated.';

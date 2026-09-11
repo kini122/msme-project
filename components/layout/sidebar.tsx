@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth/auth-context';
 import {
   LayoutDashboard,
   Building2,
@@ -10,38 +11,45 @@ import {
   SearchCode,
   ShieldCheck,
   Award,
+  LogOut,
+  UserCheck,
+  Building,
 } from 'lucide-react';
-
-const NAV_ITEMS = [
-  {
-    name: 'Overview & Snapshot',
-    href: '/overview',
-    icon: LayoutDashboard,
-    badge: null,
-  },
-  {
-    name: 'Company Master List',
-    href: '/companies',
-    icon: Building2,
-    badge: null,
-  },
-  {
-    name: 'Scheme Explorer',
-    href: '/schemes',
-    icon: FileCheck2,
-    badge: null,
-  },
-  {
-    name: 'Live Udyam Verification',
-    href: '/live-lookup',
-    icon: SearchCode,
-    badge: null,
-    isLive: true,
-  },
-];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAdmin, logout } = useAuth();
+
+  const navItems = [
+    {
+      name: 'Overview & Snapshot',
+      href: '/overview',
+      icon: LayoutDashboard,
+      adminOnly: false,
+    },
+    {
+      name: 'Company Master List',
+      href: '/companies',
+      icon: Building2,
+      adminOnly: false,
+    },
+    {
+      name: 'Scheme Explorer',
+      href: '/schemes',
+      icon: FileCheck2,
+      adminOnly: false,
+    },
+    {
+      name: 'Live Udyam Verification',
+      href: '/live-lookup',
+      icon: SearchCode,
+      adminOnly: true, // Only visible to Admin
+      isLive: true,
+    },
+  ];
+
+  const visibleNavItems = navItems.filter((item) => !item.adminOnly || isAdmin);
 
   return (
     <aside className="w-64 bg-slate-900 text-slate-100 flex flex-col border-r border-slate-800 shrink-0 select-none">
@@ -55,8 +63,8 @@ export function Sidebar() {
             <h1 className="font-heading font-bold text-sm tracking-tight text-white leading-none">
               MSME INTELLIGENCE
             </h1>
-            <p className="text-[11px] text-slate-400 mt-1 font-medium">
-              CA Rangamani Associates
+            <p className="text-[11px] text-emerald-400 mt-1 font-medium">
+              Kerala Regional Directorate
             </p>
           </div>
         </div>
@@ -65,10 +73,10 @@ export function Sidebar() {
       {/* Navigation Section */}
       <div className="px-3 py-4 flex-1 space-y-1">
         <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-          Core Workstation
+          Workstation Navigation
         </div>
 
-        {NAV_ITEMS.map((item) => {
+        {visibleNavItems.map((item) => {
           const isActive =
             pathname === item.href ||
             (item.href !== '/overview' && pathname.startsWith(item.href));
@@ -96,37 +104,52 @@ export function Sidebar() {
                 />
                 <span>{item.name}</span>
               </div>
-
-              {item.badge && (
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-medium ${
-                    item.isLive
-                      ? 'bg-amber-950/80 text-amber-300 border border-amber-800/60'
-                      : isActive
-                      ? 'bg-slate-700 text-slate-200'
-                      : 'bg-slate-800 text-slate-400'
-                  }`}
-                >
-                  {item.badge}
-                </span>
-              )}
             </Link>
           );
         })}
       </div>
 
-      {/* Advisory Information Panel */}
-      <div className="p-4 m-3 bg-slate-800/60 border border-slate-700/60 rounded-md text-xs space-y-2">
-        <div className="flex items-center gap-1.5 text-slate-300 font-semibold text-[11px]">
-          <Award className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Statutory Intelligence</span>
+      {/* Active User Dossier & Session Card */}
+      <div className="p-3 m-3 bg-slate-800/80 border border-slate-700/80 rounded-lg text-xs space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                isAdmin
+                  ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                  : 'bg-blue-950 text-blue-400 border border-blue-800'
+              }`}
+            >
+              {isAdmin ? <UserCheck className="w-3.5 h-3.5" /> : <Building className="w-3.5 h-3.5" />}
+            </div>
+            <div className="leading-tight">
+              <span className="font-semibold text-slate-100 text-xs block truncate max-w-[120px]">
+                {user?.name || 'Staff User'}
+              </span>
+              <span className="text-[10px] text-slate-400 block truncate max-w-[120px]">
+                {user?.designation || 'Associate'}
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              router.push('/login');
+            }}
+            className="p-1 text-slate-400 hover:text-rose-400 transition"
+            title="Log out"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
         </div>
-        <p className="text-[11px] text-slate-400 leading-relaxed">
-          National MSME registry intelligence with deterministic eligibility evaluation across central and state policies.
-        </p>
-        <div className="pt-1 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-700/60">
-          <span>Platform Version</span>
-          <span className="font-semibold text-slate-200 font-mono">v1.0 Sovereign</span>
+
+        <div className="pt-2 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-700/60 font-mono">
+          <span>Role Clearance:</span>
+          <span className={`font-bold ${isAdmin ? 'text-emerald-400' : 'text-blue-400'}`}>
+            {isAdmin ? 'ADMIN (Full Access)' : 'EMPLOYEE (View Only)'}
+          </span>
         </div>
       </div>
     </aside>

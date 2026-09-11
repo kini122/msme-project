@@ -3,6 +3,7 @@ import { Inter, Hanken_Grotesk, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { AppShell } from '@/components/layout/app-shell';
 import { AppDataProvider } from '@/lib/store/app-data-context';
+import { AuthProvider } from '@/lib/auth/auth-context';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -35,9 +36,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${hanken.variable} ${jetbrains.variable}`}>
       <body className="bg-slate-50 text-slate-900 min-h-screen">
-        <AppDataProvider>
-          <AppShell>{children}</AppShell>
-        </AppDataProvider>
+        <AuthProvider>
+          <AppDataProvider>
+            <AppShell>{children}</AppShell>
+          </AppDataProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -12,7 +12,7 @@ interface PageHeaderProps {
   title: string;
   description?: string;
   breadcrumbs?: BreadcrumbItem[];
-  source?: 'mock' | 'rapidapi';
+  source?: 'mock' | 'rapidapi' | 'myscheme' | 'custom';
   fetchedAt?: string;
   actions?: React.ReactNode;
 }

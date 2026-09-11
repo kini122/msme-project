@@ -1,168 +1,57 @@
-export const STATE_DISTRICTS_MAP: Record<string, string[]> = {
-  Maharashtra: [
-    'Pune',
-    'Mumbai City',
-    'Mumbai Suburban',
-    'Thane',
-    'Nashik',
-    'Aurangabad',
-    'Nagpur',
-    'Kolhapur',
-    'Solapur',
-    'Ahmednagar',
-    'Satara',
-    'Raigad',
-  ],
-  Gujarat: [
-    'Ahmedabad',
-    'Surat',
-    'Vadodara',
-    'Rajkot',
-    'Kutch',
-    'Bhavnagar',
-    'Bharuch',
-    'Valsad',
-    'Gandhinagar',
-    'Jamnagar',
-  ],
-  Karnataka: [
-    'Bengaluru Urban',
-    'Bengaluru Rural',
-    'Mysuru',
-    'Dharwad',
-    'Dakshina Kannada',
-    'Belagavi',
-    'Tumakuru',
-    'Ballari',
-    'Shivamogga',
-    'Udupi',
-  ],
-  'Tamil Nadu': [
-    'Chennai',
-    'Coimbatore',
-    'Tiruppur',
-    'Salem',
-    'Madurai',
-    'Kanchipuram',
-    'Chengalpattu',
-    'Erode',
-    'Tiruchirappalli',
-    'Vellore',
-  ],
-  Kerala: [
-    'Kozhikode',
-    'Ernakulam',
-    'Thiruvananthapuram',
-    'Thrissur',
-    'Alappuzha',
-    'Palakkad',
-    'Kollam',
-    'Malappuram',
-    'Kannur',
-    'Kottayam',
-  ],
-  'Uttar Pradesh': [
-    'Kanpur Nagar',
-    'Gautam Buddha Nagar',
-    'Ghaziabad',
-    'Lucknow',
-    'Varanasi',
-    'Agra',
-    'Moradabad',
-    'Aligarh',
-    'Meerut',
-    'Prayagraj',
-  ],
-  Telangana: [
-    'Hyderabad',
-    'Medchal-Malkajgiri',
-    'Rangareddy',
-    'Sangareddy',
-    'Medak',
-    'Warangal',
-    'Nalgonda',
-    'Karimnagar',
-  ],
-  'West Bengal': [
-    'Kolkata',
-    'Howrah',
-    'North 24 Parganas',
-    'South 24 Parganas',
-    'Hooghly',
-    'Paschim Bardhaman',
-    'Purba Medinipur',
-    'Darjeeling',
-  ],
-  Delhi: [
-    'New Delhi',
-    'South West Delhi',
-    'West Delhi',
-    'South Delhi',
-    'North Delhi',
-    'East Delhi',
-    'North West Delhi',
-  ],
-  Rajasthan: [
-    'Jaipur',
-    'Jodhpur',
-    'Udaipur',
-    'Kota',
-    'Bhiwadi (Alwar)',
-    'Ajmer',
-    'Bikaner',
-    'Bhilwara',
-  ],
-  Punjab: [
-    'Ludhiana',
-    'Amritsar',
-    'Jalandhar',
-    'Patiala',
-    'SAS Nagar (Mohali)',
-    'Bathinda',
-  ],
-  Haryana: [
-    'Gurugram',
-    'Faridabad',
-    'Panipat',
-    'Sonipat',
-    'Ambala',
-    'Yamunanagar',
-    'Karnal',
-  ],
-  'Madhya Pradesh': [
-    'Indore',
-    'Bhopal',
-    'Gwalior',
-    'Jabalpur',
-    'Pithampur (Dhar)',
-    'Ujjain',
-  ],
-  'Andhra Pradesh': [
-    'Visakhapatnam',
-    'Krishna',
-    'Guntur',
-    'Chittoor',
-    'East Godavari',
-    'Nellore',
-  ],
-  Odisha: [
-    'Khordha',
-    'Cuttack',
-    'Sundargarh',
-    'Ganjam',
-    'Balasore',
-    'Sambalpur',
-  ],
+export const KERALA_DISTRICTS = [
+  'Ernakulam',
+  'Thiruvananthapuram',
+  'Kozhikode',
+  'Thrissur',
+  'Palakkad',
+  'Kollam',
+  'Alappuzha',
+  'Kottayam',
+  'Kannur',
+  'Kasaragod',
+  'Pathanamthitta',
+  'Malappuram',
+  'Idukki',
+  'Wayanad',
+] as const;
+
+export type KeralaDistrict = typeof KERALA_DISTRICTS[number];
+
+export const KERALA_SECTORS = [
+  'Food & Agro Processing',
+  'Spices & Oleoresins',
+  'Marine & Seafood Exports',
+  'Rubber & Polymers',
+  'IT & Software Services',
+  'Ayurveda & Healthcare Products',
+  'Coir & Handloom Textiles',
+  'Light Engineering & Machinery',
+  'Wood & Furniture Products',
+  'Renewable Energy & Solar',
+] as const;
+
+export const KERALA_INDUSTRIAL_ZONES: Record<string, string> = {
+  Ernakulam: 'KINFRA High-Tech Park, Kalamassery / Angamaly Industrial Area',
+  Thiruvananthapuram: 'KINFRA Apparel & IT Park, Menamkulam / Technopark Phase III',
+  Kozhikode: 'KINFRA Mega Food Park, Kakkancherry / KINFRA Cyberpark',
+  Thrissur: 'KINFRA Integrated Industrial Complex, Koratty / Puzhakkal Cluster',
+  Palakkad: 'KINFRA Wise Park, Kanjikode Industrial Estate',
+  Kollam: 'KINFRA Cashew & Marine Food Processing Zone, Kundara',
+  Alappuzha: 'Cherthala Infopark & Coir Industrial Cluster, Aroor',
+  Kottayam: 'KINFRA Rubber & Polymer Industrial Complex, Velloor',
+  Kannur: 'KINFRA Textile & Industrial Park, Mattannur',
+  Kasaragod: 'KINFRA Industrial Growth Centre, Seethangoli',
+  Pathanamthitta: 'District Industrial Area, Kozhencherry / Adoor Zone',
+  Malappuram: 'INKEL Industrial Greens / Panakkad Mega Cluster',
+  Idukki: 'Spices & Agro Industrial Estate, Thodupuzha',
+  Wayanad: 'Organic & Plantation Processing Cluster, Meenangadi',
 };
 
 export function getDistrictsForState(state?: string): string[] {
-  if (!state || state === 'ALL') {
-    // Return all unique districts across all states
-    const all = new Set<string>();
-    Object.values(STATE_DISTRICTS_MAP).forEach((districts) => {
-      districts.forEach((d) => all.add(d));
-    });
-    return Array.from(all).sort();
-  }
-  return STATE_DISTRICTS_MAP[state] || [];
+  return [...KERALA_DISTRICTS];
 }
+
+// Legacy compatibility helper
+export const STATE_DISTRICTS_MAP: Record<string, string[]> = {
+  Kerala: [...KERALA_DISTRICTS],
+};

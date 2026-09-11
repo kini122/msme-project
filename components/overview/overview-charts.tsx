@@ -12,21 +12,20 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Legend,
 } from 'recharts';
 
 interface OverviewChartsProps {
   classificationData: Array<{ name: string; value: number; color: string }>;
   sectorData: Array<{ name: string; count: number }>;
-  stateData: Array<{ name: string; count: number }>;
+  districtData: Array<{ name: string; count: number }>;
 }
 
 export function OverviewCharts({
   classificationData,
   sectorData,
-  stateData,
+  districtData,
 }: OverviewChartsProps) {
-  const [activeTab, setActiveTab] = React.useState<'sector' | 'state'>('sector');
+  const [activeTab, setActiveTab] = React.useState<'sector' | 'district'>('sector');
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -42,7 +41,7 @@ export function OverviewCharts({
     );
   }
 
-  const secondaryChartData = activeTab === 'sector' ? sectorData : stateData;
+  const secondaryChartData = activeTab === 'sector' ? sectorData : districtData;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -51,14 +50,14 @@ export function OverviewCharts({
         <div>
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-heading font-bold text-sm text-slate-900">
-              MSME Classification Distribution
+              Kerala MSME Classification Distribution
             </h3>
             <span className="text-[11px] font-mono text-slate-400">
               Cohort Share
             </span>
           </div>
           <p className="text-xs text-slate-500 mb-4">
-            Breakdown across Micro, Small, and Medium cohorts in the dataset
+            Breakdown across Micro, Small, and Medium cohorts across Kerala districts
           </p>
         </div>
 
@@ -115,12 +114,12 @@ export function OverviewCharts({
         </div>
       </div>
 
-      {/* Sector & State Breakdown Bar Chart */}
+      {/* Sector & District Breakdown Bar Chart */}
       <div className="lg:col-span-7 bg-white border border-slate-200 rounded-lg p-5 shadow-subtle flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-heading font-bold text-sm text-slate-900">
-              Concentration Breakdown
+              Kerala Industry & Regional Concentrations
             </h3>
             {/* Tab switch */}
             <div className="flex items-center p-0.5 bg-slate-100 rounded text-xs">
@@ -137,19 +136,19 @@ export function OverviewCharts({
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('state')}
+                onClick={() => setActiveTab('district')}
                 className={`px-2.5 py-1 rounded text-xs font-medium transition ${
-                  activeTab === 'state'
+                  activeTab === 'district'
                     ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
-                By State
+                By District
               </button>
             </div>
           </div>
           <p className="text-xs text-slate-500 mb-4">
-            Enterprise count clustered by {activeTab === 'sector' ? 'industry sector' : 'registered state jurisdiction'}
+            Enterprise count clustered by {activeTab === 'sector' ? 'Kerala industrial sector' : 'Kerala district jurisdiction'}
           </p>
         </div>
 
@@ -165,7 +164,7 @@ export function OverviewCharts({
               <YAxis
                 type="category"
                 dataKey="name"
-                width={120}
+                width={130}
                 tick={{ fontSize: 11, fill: '#334155' }}
               />
               <Tooltip
@@ -178,13 +177,13 @@ export function OverviewCharts({
                   fontSize: '12px',
                 }}
               />
-              <Bar dataKey="count" fill="#2563eb" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="count" fill="#0284c7" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-          <span>Displaying Top Active Clusters</span>
+          <span>Displaying Top Active Kerala Clusters</span>
           <span className="font-mono">Total Distinct Clusters: {secondaryChartData.length}</span>
         </div>
       </div>

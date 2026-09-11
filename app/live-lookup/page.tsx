@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/layout/page-header';
 import { CompanyProfile } from '@/components/companies/company-profile';
 import { matchCompanyToAllSchemes } from '@/lib/matching/match-company';
 import { useAppData } from '@/lib/store/app-data-context';
+import { useAuth } from '@/lib/auth/auth-context';
 import { Company } from '@/types/company';
 import {
   Search,
@@ -18,16 +19,18 @@ import {
   Plus,
   Check,
   ArrowRight,
+  Lock,
 } from 'lucide-react';
 
 const SAMPLE_QUERIES = [
-  { label: 'Maharashtra Precision Eng (Live)', query: 'UDYAM-MH-03-0048192' },
-  { label: 'Kerala Agro Processing', query: 'UDYAM-KL-07-0012934' },
-  { label: 'Delhi MedTech Diagnostic', query: 'UDYAM-DL-03-0045129' },
+  { label: 'Thriveni Food Processing (Live Kerala)', query: 'UDYAM-KL-11-0001404' },
+  { label: 'Cochin Marine Exports (Live Kerala)', query: 'UDYAM-KL-07-0012934' },
+  { label: 'Malabar Precision IT (Live Kerala)', query: 'UDYAM-KL-03-0045129' },
 ];
 
 export default function LiveLookupPage() {
   const { companies, schemes, addCompanies } = useAppData();
+  const { isAdmin } = useAuth();
 
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,6 +59,41 @@ export default function LiveLookupPage() {
         c.id === liveCompany.id
     );
   }, [liveCompany, companies]);
+
+  // Guard: if non-admin employee visits directly, show polite access restricted card
+  if (!isAdmin) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Administrative Privilege Required"
+          description="Access to live statutory Udyam verification gateways is restricted to Administrator personnel."
+          breadcrumbs={[
+            { label: 'Overview', href: '/overview' },
+            { label: 'Live Verification (Restricted)' },
+          ]}
+        />
+        <div className="bg-white border border-slate-200 rounded-lg p-12 text-center text-slate-500 shadow-subtle max-w-lg mx-auto">
+          <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto mb-3">
+            <Lock className="w-6 h-6" />
+          </div>
+          <h3 className="font-bold text-base text-slate-800">
+            Live Verification Access Restricted
+          </h3>
+          <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+            Your current login clearance (Associate Consultant / View Only) permits access to the Enterprise Directory and Scheme Explorer. Contact a Senior Partner for live verification privileges.
+          </p>
+          <div className="mt-5">
+            <Link
+              href="/companies"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded text-xs font-semibold hover:bg-slate-800 transition"
+            >
+              <span>Return to Enterprise Directory</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleLookup = async (lookupQuery: string) => {
     const trimmed = lookupQuery.trim();
@@ -123,7 +161,7 @@ export default function LiveLookupPage() {
     <div className="space-y-8">
       <PageHeader
         title="Live Udyam Verification & Scheme Matching"
-        description="Verify enterprise registration credentials in real-time and execute immediate statutory eligibility evaluations across Central and State government schemes."
+        description="Verify enterprise registration credentials and execute immediate statutory eligibility evaluations across Central and State government schemes."
         breadcrumbs={[
           { label: 'Overview', href: '/overview' },
           { label: 'Live Verification' },
@@ -138,11 +176,11 @@ export default function LiveLookupPage() {
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <h3 className="font-heading font-bold text-sm text-slate-900">
-              Udyam Registration Verification Terminal
+              Udyam Registration Verification
             </h3>
           </div>
-          <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">
-            Gateway: Connected
+          <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full font-semibold">
+            Directorate of Industries & Commerce (Kerala)
           </span>
         </div>
 
@@ -159,7 +197,7 @@ export default function LiveLookupPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Enter Udyam Registration Number (e.g. UDYAM-MH-03-0048192)..."
+              placeholder="Enter Udyam Registration Number (e.g. UDYAM-KL-11-0001404)..."
               disabled={loading}
               className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-mono"
             />
@@ -237,10 +275,10 @@ export default function LiveLookupPage() {
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
           <div>
             <h4 className="font-bold text-sm text-slate-800">
-              Connecting to National MSME Verification Gateway...
+              Verifying Udyam Registration Credentials...
             </h4>
             <p className="text-xs text-slate-400 mt-1">
-              Validating Udyam registration credentials, retrieving audited turnover, and matching statutory scheme rules.
+              Validating Udyam registration credentials and evaluating statutory scheme eligibility.
             </p>
           </div>
           <div className="w-48 h-1.5 bg-slate-100 rounded-full mx-auto overflow-hidden">
@@ -261,7 +299,7 @@ export default function LiveLookupPage() {
                   {liveCompany.companyName}
                 </h4>
                 <p className="text-xs text-slate-500 font-mono">
-                  {liveCompany.udyamNumber}
+                  {liveCompany.udyamNumber} • {liveCompany.district}, Kerala
                 </p>
               </div>
             </div>
@@ -294,7 +332,18 @@ export default function LiveLookupPage() {
           </div>
 
           {/* Full Enterprise Dossier and Scheme Match Cards */}
-          <CompanyProfile company={liveCompany} matches={liveMatches} />
+          <CompanyProfile
+            company={liveCompany}
+            matches={liveMatches}
+            onCompanyUpdate={(updated) => {
+              setLiveCompany(updated);
+              try {
+                sessionStorage.setItem('last_live_company', JSON.stringify(updated));
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+          />
         </div>
       )}
 

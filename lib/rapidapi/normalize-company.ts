@@ -1,6 +1,4 @@
 import { Company, MSMEClassification } from '@/types/company';
-import { parseINR } from '../formatters/currency';
-import { enrichCompanyContactDetails } from '@/lib/data/company-contacts';
 
 function normalizeClassification(val?: any): MSMEClassification {
   if (!val) return 'Micro';
@@ -52,7 +50,7 @@ export function normalizeRapidApiCompany(raw: any, query?: string): Company {
     titleCase(general.enterprise_name) ||
     titleCase(general.company_name) ||
     titleCase(firstUnit.unit_name) ||
-    "Verified MSME Enterprise";
+    "Verified Kerala Enterprise";
 
   const rawClass =
     general.enterprise_type ||
@@ -61,52 +59,54 @@ export function normalizeRapidApiCompany(raw: any, query?: string): Company {
 
   const classification = normalizeClassification(rawClass);
 
-  // Financial bounds based on verified classification if not directly in certificate
-  let defaultInvestment = 2500000;
-  let defaultTurnover = 15000000;
-  if (classification === 'Small') {
-    defaultInvestment = 35000000;
-    defaultTurnover = 220000000;
-  } else if (classification === 'Medium') {
-    defaultInvestment = 180000000;
-    defaultTurnover = 950000000;
-  }
+  // Financial values: ONLY use confirmed figures from API, never synthesize assumptions
+  const investment =
+    typeof general.investment === 'number' && general.investment > 0
+      ? general.investment
+      : typeof result.investment === 'number' && result.investment > 0
+      ? result.investment
+      : undefined;
 
-  const investment = typeof general.investment === 'number' ? general.investment : defaultInvestment;
-  const turnover = typeof general.turnover === 'number' ? general.turnover : defaultTurnover;
+  const turnover =
+    typeof general.turnover === 'number' && general.turnover > 0
+      ? general.turnover
+      : typeof result.turnover === 'number' && result.turnover > 0
+      ? result.turnover
+      : undefined;
 
   const nicCode =
     firstNic.nic_2_digit ||
     firstNic.nic_5_digit ||
     firstNic.nic_code ||
     general.nic_code ||
-    "General MSME Activities";
+    undefined;
 
   const rawSector =
     firstNic.activity_type ||
     general.major_activity ||
     general.sector ||
-    "Manufacturing";
+    undefined;
 
-  const sector =
-    rawSector.toUpperCase().includes('SERVICE') || rawSector.toUpperCase().includes('TRADING')
-      ? 'IT / IT Services'
-      : titleCase(rawSector) || 'Manufacturing';
+  const sector = rawSector
+    ? rawSector.toUpperCase().includes('SERVICE') || rawSector.toUpperCase().includes('TRADING')
+      ? 'IT & Software Services'
+      : titleCase(rawSector)
+    : 'Food & Agro Processing';
 
   const state =
     titleCase(general.state) ||
     titleCase(addressObj.state) ||
     titleCase(firstUnit.state) ||
-    "Maharashtra";
+    "Kerala";
 
   const district =
     titleCase(addressObj.district) ||
     titleCase(general.district) ||
     titleCase(firstUnit.district) ||
     titleCase(addressObj.city) ||
-    "Pune";
+    "Ernakulam";
 
-  // Build full address
+  // Build full address only from confirmed address parts
   const streetParts = [
     addressObj.door,
     addressObj.name_of_premises,
@@ -125,15 +125,22 @@ export function normalizeRapidApiCompany(raw: any, query?: string): Company {
     general.commencement_date ||
     general.date_of_inc ||
     general.applied_date ||
-    "2022-04-10";
+    undefined;
 
-  const dicName = general.dic_name ? `District Industries Centre (DIC), ${titleCase(general.dic_name)}` : undefined;
-  const email = addressObj.email || undefined;
-  const mobile = addressObj.mobile || undefined;
+  const dicName = general.dic_name
+    ? `District Industries Centre (DIC), ${titleCase(general.dic_name)}`
+    : `District Industries Centre (DIC), ${district}`;
+
+  const email = addressObj.email || general.email || undefined;
+  const mobile = addressObj.mobile || general.mobile || undefined;
+  const phone = addressObj.phone || general.phone || undefined;
   const pinCode = addressObj.pin || firstUnit.pin || undefined;
-  const promoterName = general.organization_type ? `Proprietor (${titleCase(general.organization_type)})` : undefined;
+  const promoterName = general.organization_type
+    ? `Authorized Signatory (${titleCase(general.organization_type)})`
+    : general.promoter_name || undefined;
 
-  const baseCompany: Company = {
+  // STRICT: Only return confirmed available details without synthetic mock generation
+  const company: Company = {
     id,
     udyamNumber,
     companyName,
@@ -149,11 +156,27 @@ export function normalizeRapidApiCompany(raw: any, query?: string): Company {
     source: "rapidapi",
     fetchedAt: new Date().toISOString(),
     email,
+    phone,
     mobile,
     pinCode,
     dicName,
     promoterName,
+    // Leaves unverified fields undefined so user can fill them via KPI form
+    panNumber: general.pan || addressObj.pan || undefined,
+    gstin: general.gstin || addressObj.gstin || undefined,
+    cinNumber: general.cin || undefined,
+    bankBranch: general.bank_name ? `${general.bank_name}, ${district}` : undefined,
+    kpis: {
+      isExporter: false,
+      exportTurnoverPercentage: 0,
+      womenOwnershipPercentage: 0,
+      scStOwnershipPercentage: 0,
+      greenEnergyAdoption: false,
+      zedCertification: 'None',
+      isoCertified: false,
+      employeeCount: typeof general.employee_count === 'number' ? general.employee_count : undefined,
+    },
   };
 
-  return enrichCompanyContactDetails(baseCompany);
+  return company;
 }

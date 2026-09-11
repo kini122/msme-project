@@ -1,6 +1,17 @@
 export type RuleState = "pass" | "fail" | "unknown" | "not_applicable";
 
-export type MatchCheckKey = "classification" | "sector" | "state" | "turnover" | "investment";
+export type MatchCheckKey =
+  | "enterprise_scope"
+  | "classification"
+  | "sector"
+  | "state"
+  | "turnover"
+  | "investment"
+  | "export_kpi"
+  | "green_kpi"
+  | "tech_quality_kpi"
+  | "credit_kpi"
+  | "social_kpi";
 
 export interface MatchCheck {
   key: MatchCheckKey;

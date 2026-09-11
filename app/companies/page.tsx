@@ -1,27 +1,34 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/layout/page-header';
 import { CompanyFilters } from '@/components/companies/company-filters';
 import { CompanyTable } from '@/components/companies/company-table';
+import { CompanyFormModal } from '@/components/companies/company-form-modal';
 import { exportCompaniesToCSV } from '@/lib/export/export-csv';
 import { filterCompanies } from '@/lib/filters/company-filters';
 import { useAppData } from '@/lib/store/app-data-context';
-import { CompanyFilterState } from '@/types/company';
+import { useAuth } from '@/lib/auth/auth-context';
+import { Company, CompanyFilterState } from '@/types/company';
+import { Plus, Sparkles } from 'lucide-react';
 
 function CompanyListContent() {
   const searchParams = useSearchParams();
   const initialClassification = searchParams.get('classification') || 'ALL';
+  const { isAdmin } = useAuth();
 
   const {
     companies,
     schemes,
+    createCompany,
     fetchLiveCompanyBatch,
     isFetchingLive,
     lastFetchMessage,
     clearNotification,
   } = useAppData();
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Extract unique sectors and states dynamically from active registry
   const sectors = React.useMemo(() => {
@@ -44,7 +51,7 @@ function CompanyListContent() {
     search: '',
     classification: initialClassification,
     sector: 'ALL',
-    state: 'ALL',
+    state: 'Kerala',
     district: 'ALL',
   });
 
@@ -62,7 +69,7 @@ function CompanyListContent() {
   const handleExportCSV = () => {
     exportCompaniesToCSV(
       filteredCompanies,
-      `msme-registry-${filters.classification.toLowerCase()}.csv`
+      `kerala-msme-registry-${filters.classification.toLowerCase()}.csv`
     );
   };
 
@@ -70,16 +77,35 @@ function CompanyListContent() {
     await fetchLiveCompanyBatch(filters, 12);
   };
 
+  const handleCreateCompany = (newComp: Company) => {
+    createCompany(newComp);
+    setIsCreateModalOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Company Master List"
-        description="Comprehensive directory of registered MSMEs with financial turnover, investment in plant & machinery, and active scheme match telemetry."
+        title="Kerala Company Master List"
+        description="Comprehensive statutory directory of registered Kerala MSMEs with financial scale, industrial district jurisdiction, and active ministerial scheme matches."
         breadcrumbs={[
           { label: 'Overview', href: '/overview' },
           { label: 'Company Master List' },
         ]}
         source="mock"
+        actions={
+          isAdmin ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded text-xs font-semibold transition shadow-xs"
+              >
+                <Plus className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Add Enterprise</span>
+              </button>
+            </div>
+          ) : undefined
+        }
       />
 
       <CompanyFilters
@@ -97,6 +123,14 @@ function CompanyListContent() {
       />
 
       <CompanyTable companies={filteredCompanies} schemes={schemes} />
+
+      {/* Register New Company Modal */}
+      <CompanyFormModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={handleCreateCompany}
+        mode="create"
+      />
     </div>
   );
 }

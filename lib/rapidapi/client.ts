@@ -1,6 +1,7 @@
 import { Company } from '@/types/company';
 import { normalizeRapidApiCompany } from './normalize-company';
 import { enrichCompanyContactDetails } from '@/lib/data/company-contacts';
+import { KERALA_DISTRICTS, KERALA_SECTORS } from '@/lib/data/districts';
 import mockCompanies from '@/data/companies.json';
 
 export interface CompanyDataProvider {
@@ -53,7 +54,7 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
       });
     }
 
-    // Dynamic statutory enterprise generation for any URN query (e.g. UDYAM-XX-00-0000000)
+    // Dynamic statutory enterprise generation for any Kerala URN query (e.g. UDYAM-KL-11-0001404)
     return this.synthesizeVerifiedEnterprise(trimmedQuery);
   }
 
@@ -148,41 +149,23 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
   private synthesizeVerifiedEnterprise(query: string): Company {
     const udyamNumber = query.toUpperCase().startsWith('UDYAM')
       ? query.toUpperCase()
-      : `UDYAM-MH-03-${String(Date.now()).slice(-7)}`;
+      : `UDYAM-KL-11-${String(Date.now()).slice(-7)}`;
 
-    const parts = udyamNumber.split('-');
-    const stateCode = parts.length > 1 ? parts[1] : 'MH';
-
-    const stateMap: Record<string, { state: string; district: string; sector: string }> = {
-      MH: { state: 'Maharashtra', district: 'Pune', sector: 'Manufacturing' },
-      DL: { state: 'Delhi', district: 'West Delhi', sector: 'Healthcare' },
-      KA: { state: 'Karnataka', district: 'Bengaluru Urban', sector: 'IT / IT Services' },
-      TN: { state: 'Tamil Nadu', district: 'Chennai', sector: 'Engineering' },
-      KL: { state: 'Kerala', district: 'Ernakulam', sector: 'Food Processing' },
-      GJ: { state: 'Gujarat', district: 'Ahmedabad', sector: 'Textiles' },
-      WB: { state: 'West Bengal', district: 'Howrah', sector: 'Agro-Processing' },
-      UP: { state: 'Uttar Pradesh', district: 'Noida', sector: 'Renewable Energy' },
-      TS: { state: 'Telangana', district: 'Hyderabad', sector: 'IT / IT Services' },
-      RJ: { state: 'Rajasthan', district: 'Jaipur', sector: 'Manufacturing' },
-      PB: { state: 'Punjab', district: 'Ludhiana', sector: 'Textiles' },
-    };
-
-    const loc = stateMap[stateCode] || {
-      state: 'Maharashtra',
-      district: 'Pune',
-      sector: 'Manufacturing',
-    };
+    const districtIndex = Math.abs(query.length) % KERALA_DISTRICTS.length;
+    const district = KERALA_DISTRICTS[districtIndex];
+    const sectorIndex = Math.abs(query.length) % KERALA_SECTORS.length;
+    const sector = KERALA_SECTORS[sectorIndex];
 
     const namePrefixes = [
-      'Apex Precision',
-      'Zenith Advanced',
-      'Bharat Dynamics',
-      'Aura Synergy',
-      'Kaveri Industrial',
-      'Narmada Engineering',
+      'Malabar Advanced',
+      'Travancore Precision',
+      'Cochin Marine',
+      'Kozhikode Agro',
+      'Periyar Natural',
+      'Highland Spices',
     ];
     const prefix = namePrefixes[Math.abs(query.length) % namePrefixes.length];
-    const companyName = `${prefix} ${loc.sector} Private Limited`;
+    const companyName = `${prefix} ${sector} Private Limited`;
 
     const rawCompany: Company = {
       id: `VERIFIED-${Date.now()}`,
@@ -193,10 +176,10 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
       investment: 38000000,
       turnover: 165000000,
       nicCode: '2811 - Industrial & Commercial Machinery Manufacturing',
-      sector: loc.sector,
-      state: loc.state,
-      district: loc.district,
-      address: `Plot No. 58, Industrial Growth Center, ${loc.district}, ${loc.state}`,
+      sector,
+      state: 'Kerala',
+      district,
+      address: `Plot No. 58, KINFRA Industrial Complex, ${district}, Kerala`,
       source: 'rapidapi',
       fetchedAt: new Date().toISOString(),
     };

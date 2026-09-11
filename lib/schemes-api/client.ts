@@ -58,6 +58,7 @@ export class SchemesApiClient {
         method: 'GET',
         headers: {
           'x-api-key': this.apiKey,
+          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         signal: controller.signal,
@@ -105,6 +106,7 @@ export class SchemesApiClient {
         method: 'GET',
         headers: {
           'x-api-key': this.apiKey,
+          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         signal: controller.signal,

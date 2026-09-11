@@ -63,7 +63,7 @@ export function MatchCard({ match, className = '' }: MatchCardProps) {
         {match.score !== null && (
           <div className="my-3">
             <div className="flex items-center justify-between text-[11px] font-medium text-slate-600 mb-1">
-              <span>Deterministic Match Score</span>
+              <span>Statutory Match Score</span>
               <span className="font-mono font-bold">{match.score}/100</span>
             </div>
             <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
@@ -86,7 +86,7 @@ export function MatchCard({ match, className = '' }: MatchCardProps) {
         {/* Itemized Reasons */}
         <div className="mt-3.5">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
-            Rule Assessment Breakdown:
+            Statutory Assessment Breakdown:
           </div>
           <MatchReasons checks={match.checks} />
         </div>

@@ -2,24 +2,24 @@
 
 import React from 'react';
 import { CompanyFilterState } from '@/types/company';
-import { getDistrictsForState } from '@/lib/data/districts';
+import { KERALA_DISTRICTS, KERALA_SECTORS } from '@/lib/data/districts';
+import { useAuth } from '@/lib/auth/auth-context';
 import {
   Search,
   RotateCcw,
   Download,
   Sparkles,
   Loader2,
-  MapPin,
-  Building,
   CheckCircle2,
   X,
+  MapPin,
 } from 'lucide-react';
 
 interface CompanyFiltersProps {
   filters: CompanyFilterState;
   onFilterChange: (filters: CompanyFilterState) => void;
   sectors: string[];
-  states: string[];
+  states?: string[];
   totalCount: number;
   filteredCount: number;
   onExportCSV?: () => void;
@@ -33,7 +33,6 @@ export function CompanyFilters({
   filters,
   onFilterChange,
   sectors,
-  states,
   totalCount,
   filteredCount,
   onExportCSV,
@@ -42,10 +41,7 @@ export function CompanyFilters({
   notificationMessage,
   onClearNotification,
 }: CompanyFiltersProps) {
-  // Cascading districts list based on selected state
-  const availableDistricts = React.useMemo(() => {
-    return getDistrictsForState(filters.state);
-  }, [filters.state]);
+  const { isAdmin } = useAuth();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFilterChange({ ...filters, search: e.target.value });
@@ -59,12 +55,6 @@ export function CompanyFilters({
     onFilterChange({ ...filters, sector: e.target.value });
   };
 
-  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newState = e.target.value;
-    // Reset district if state changes
-    onFilterChange({ ...filters, state: newState, district: 'ALL' });
-  };
-
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onFilterChange({ ...filters, district: e.target.value });
   };
@@ -74,7 +64,7 @@ export function CompanyFilters({
       search: '',
       classification: 'ALL',
       sector: 'ALL',
-      state: 'ALL',
+      state: 'Kerala',
       district: 'ALL',
     });
   };
@@ -83,8 +73,13 @@ export function CompanyFilters({
     filters.search !== '' ||
     filters.classification !== 'ALL' ||
     filters.sector !== 'ALL' ||
-    filters.state !== 'ALL' ||
     (filters.district && filters.district !== 'ALL');
+
+  // Combined sector list
+  const sectorOptions = React.useMemo(() => {
+    const set = new Set([...KERALA_SECTORS, ...sectors]);
+    return Array.from(set).sort();
+  }, [sectors]);
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-subtle mb-6 space-y-4">
@@ -116,20 +111,20 @@ export function CompanyFilters({
             type="text"
             value={filters.search}
             onChange={handleSearchChange}
-            placeholder="Search by company name, URN, sector, district, or state..."
+            placeholder="Search by enterprise name, URN, sector, or Kerala district..."
             className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
           />
         </div>
 
-        {/* Live Fetch Button & Secondary Actions */}
+        {/* Live Fetch Button (Admin Only) & Secondary Actions */}
         <div className="flex items-center gap-2 flex-wrap">
-          {onFetchLive && (
+          {isAdmin && onFetchLive && (
             <button
               type="button"
               disabled={isFetchingLive}
               onClick={onFetchLive}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-semibold transition shadow-xs disabled:opacity-60 disabled:cursor-not-allowed"
-              title="Pull fresh verified records from gateway for selected state/district"
+              title="Pull fresh verified records from gateway for Kerala districts"
             >
               {isFetchingLive ? (
                 <>
@@ -196,20 +191,20 @@ export function CompanyFilters({
           })}
         </div>
 
-        {/* Sector, State, and District Selects */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+        {/* Sector and Kerala District Selects */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           {/* Sector Select */}
           <div>
             <label className="text-[10px] font-semibold text-slate-400 uppercase block mb-1">
-              Sector:
+              Kerala Industry Sector:
             </label>
             <select
               value={filters.sector}
               onChange={handleSectorChange}
               className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:border-blue-500"
             >
-              <option value="ALL">All Sectors</option>
-              {sectors.map((s) => (
+              <option value="ALL">All Kerala Sectors</option>
+              {sectorOptions.map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>
@@ -217,44 +212,21 @@ export function CompanyFilters({
             </select>
           </div>
 
-          {/* State Select */}
+          {/* District Select */}
           <div>
-            <label className="text-[10px] font-semibold text-slate-400 uppercase block mb-1">
-              State Jurisdiction:
-            </label>
-            <select
-              value={filters.state}
-              onChange={handleStateChange}
-              className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:border-blue-500"
-            >
-              <option value="ALL">All States (Pan-India)</option>
-              {states.map((st) => (
-                <option key={st} value={st}>
-                  {st}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* District Select (Cascading) */}
-          <div>
-            <label className="text-[10px] font-semibold text-slate-400 uppercase block mb-1">
-              District:
+            <label className="text-[10px] font-semibold text-slate-400 uppercase block mb-1 flex items-center gap-1">
+              <MapPin className="w-3 h-3 text-slate-400" />
+              Kerala District Jurisdiction (14 Districts):
             </label>
             <select
               value={filters.district || 'ALL'}
               onChange={handleDistrictChange}
-              disabled={availableDistricts.length === 0}
-              className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:border-blue-500 disabled:opacity-50"
+              className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:border-blue-500"
             >
-              <option value="ALL">
-                {filters.state && filters.state !== 'ALL'
-                  ? `All Districts in ${filters.state}`
-                  : 'All Districts'}
-              </option>
-              {availableDistricts.map((d) => (
+              <option value="ALL">All 14 Kerala Districts</option>
+              {KERALA_DISTRICTS.map((d) => (
                 <option key={d} value={d}>
-                  {d}
+                  {d} District
                 </option>
               ))}
             </select>
@@ -266,7 +238,7 @@ export function CompanyFilters({
       <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100 flex-wrap gap-2">
         <span>
           Showing <strong className="text-slate-800">{filteredCount}</strong> of{' '}
-          {totalCount} registered enterprises in active registry
+          {totalCount} registered Kerala enterprises
         </span>
 
         {isFiltered && (

@@ -6,20 +6,22 @@ import { KpiCard } from '@/components/overview/kpi-card';
 import { OverviewCharts } from '@/components/overview/overview-charts';
 import { DisclaimerBanner } from '@/components/ui/disclaimer-banner';
 import { useAppData } from '@/lib/store/app-data-context';
+import { useAuth } from '@/lib/auth/auth-context';
 import {
   Building2,
   PieChart,
   FileCheck2,
   Sparkles,
-  Search,
   ArrowRight,
   TrendingUp,
   ShieldCheck,
+  Shield,
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function OverviewPage() {
   const { companies, schemes } = useAppData();
+  const { isAdmin, user } = useAuth();
 
   const totalCompanies = companies.length;
   const microCount = companies.filter((c) => c.classification === 'Micro').length;
@@ -44,13 +46,13 @@ export default function OverviewPage() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 7);
 
-  // State breakdown aggregation
-  const stateCountMap: Record<string, number> = {};
+  // District breakdown aggregation
+  const districtCountMap: Record<string, number> = {};
   for (const c of companies) {
-    const st = c.state || 'Unspecified';
-    stateCountMap[st] = (stateCountMap[st] || 0) + 1;
+    const d = c.district || 'Unspecified';
+    districtCountMap[d] = (districtCountMap[d] || 0) + 1;
   }
-  const stateData = Object.entries(stateCountMap)
+  const districtData = Object.entries(districtCountMap)
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 7);
@@ -59,19 +61,26 @@ export default function OverviewPage() {
     <div className="space-y-8">
       {/* Page Header */}
       <PageHeader
-        title="Overview & Executive Snapshot"
-        description="Executive statutory dashboard evaluating registered MSME cohort distributions, industrial sector concentrations, and ministerial scheme capacity."
+        title="Kerala MSME Executive Snapshot"
+        description="Executive statutory dashboard evaluating registered Kerala MSME cohort distributions, industrial sector concentrations across all 14 districts, and ministerial scheme capacity."
         source="mock"
         actions={
-          <div className="flex items-center gap-2">
-            <Link
-              href="/live-lookup"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded text-xs font-semibold transition shadow-xs"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Verify Enterprise URN</span>
-            </Link>
-          </div>
+          isAdmin ? (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/live-lookup"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded text-xs font-semibold transition shadow-xs"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Verify Enterprise URN</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded text-xs font-medium">
+              <Shield className="w-3.5 h-3.5 text-slate-500" />
+              <span>Logged in as {user?.name} (Read Only)</span>
+            </div>
+          )
         }
       />
 
@@ -82,7 +91,7 @@ export default function OverviewPage() {
         <KpiCard
           title="Registered Enterprises"
           value={totalCompanies}
-          subtitle="Active Statutory Registry"
+          subtitle="Kerala Statutory Registry"
           badge="100% Audited"
           icon={Building2}
           colorScheme="slate"
@@ -124,7 +133,7 @@ export default function OverviewPage() {
       <OverviewCharts
         classificationData={classificationData}
         sectorData={sectorData}
-        stateData={stateData}
+        districtData={districtData}
       />
 
       {/* Quick Action Navigation Grid */}
@@ -138,14 +147,14 @@ export default function OverviewPage() {
               <Building2 className="w-5 h-5" />
             </div>
             <h4 className="font-bold font-heading text-sm text-slate-900 group-hover:text-blue-600 transition">
-              Company Master List &rarr;
+              Kerala Company Master List &rarr;
             </h4>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Browse, filter by sector and district, sort audited financials, and inspect individual enterprise profiles.
+              Browse, filter by Kerala sector and district, sort audited financials, and inspect individual enterprise profiles.
             </p>
           </div>
           <span className="text-[11px] font-semibold text-blue-600 mt-3 pt-3 border-t border-slate-100 flex items-center gap-1">
-            <span>Explore {totalCompanies} Enterprise Dossiers</span>
+            <span>Explore {totalCompanies} Kerala Enterprise Dossiers</span>
             <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
           </span>
         </Link>
@@ -159,38 +168,57 @@ export default function OverviewPage() {
               <FileCheck2 className="w-5 h-5" />
             </div>
             <h4 className="font-bold font-heading text-sm text-slate-900 group-hover:text-purple-600 transition">
-              National Scheme Explorer &rarr;
+              Kerala & Central Scheme Explorer &rarr;
             </h4>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Explore 4,700+ Central and State MSME programs, filter by nodal ministry, and evaluate qualifying candidate enterprises.
+              Explore 4,700+ Central and Kerala State MSME programs, filter by nodal ministry, and evaluate qualifying candidate enterprises.
             </p>
           </div>
           <span className="text-[11px] font-semibold text-purple-600 mt-3 pt-3 border-t border-slate-100 flex items-center gap-1">
-            <span>Access National Scheme Index</span>
+            <span>Access Scheme Repository</span>
             <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
           </span>
         </Link>
 
-        <Link
-          href="/live-lookup"
-          className="p-5 bg-white border border-slate-200 rounded-lg shadow-subtle hover:shadow-card hover:border-slate-300 transition group flex flex-col justify-between"
-        >
-          <div>
-            <div className="w-9 h-9 rounded bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
-              <Sparkles className="w-5 h-5" />
+        {isAdmin ? (
+          <Link
+            href="/live-lookup"
+            className="p-5 bg-white border border-slate-200 rounded-lg shadow-subtle hover:shadow-card hover:border-slate-300 transition group flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-9 h-9 rounded bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <h4 className="font-bold font-heading text-sm text-slate-900 group-hover:text-amber-600 transition">
+                Live Enterprise Verification &rarr;
+              </h4>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Verify active Udyam credentials on-demand and evaluate real-time statutory scheme eligibility across central and Kerala programs.
+              </p>
             </div>
-            <h4 className="font-bold font-heading text-sm text-slate-900 group-hover:text-amber-600 transition">
-              Live Enterprise Verification &rarr;
-            </h4>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Verify active Udyam credentials on-demand and evaluate real-time statutory scheme eligibility across central and state programs.
-            </p>
+            <span className="text-[11px] font-semibold text-amber-600 mt-3 pt-3 border-t border-slate-100 flex items-center gap-1">
+              <span>Launch Verification Gateway</span>
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+            </span>
+          </Link>
+        ) : (
+          <div className="p-5 bg-slate-50 border border-slate-200 rounded-lg shadow-subtle flex flex-col justify-between opacity-80">
+            <div>
+              <div className="w-9 h-9 rounded bg-slate-200 text-slate-600 flex items-center justify-center mb-3">
+                <Shield className="w-5 h-5" />
+              </div>
+              <h4 className="font-bold font-heading text-sm text-slate-700">
+                Live Verification Gateway (Admin Only)
+              </h4>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Direct Udyam statutory gateway queries and API batch synchronization are reserved for Senior Partners & Administrators.
+              </p>
+            </div>
+            <span className="text-[11px] font-semibold text-slate-500 mt-3 pt-3 border-t border-slate-200 flex items-center gap-1">
+              <span>View-Only Employee Access</span>
+            </span>
           </div>
-          <span className="text-[11px] font-semibold text-amber-600 mt-3 pt-3 border-t border-slate-100 flex items-center gap-1">
-            <span>Launch Verification Gateway</span>
-            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-          </span>
-        </Link>
+        )}
       </div>
     </div>
   );
