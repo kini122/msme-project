@@ -14,29 +14,118 @@ interface SchemeFiltersProps {
   isLoading?: boolean;
 }
 
-const COMMON_MYSCHEME_CATEGORIES = [
-  'Banking, Financial Services and Insurance',
+const ALL_MYSCHEME_CATEGORIES = [
+  'Agriculture',
+  'Banking',
   'Business & Entrepreneurship',
-  'Agriculture, Rural & Environment',
+  'Education & Learning',
+  'Financial Services and Insurance',
+  'Health & Wellness',
+  'Housing & Shelter',
+  'IT & Communications',
+  'Law & Justice',
+  'Public Safety',
+  'Rural & Environment',
+  'Science',
   'Skills & Employment',
   'Social welfare & Empowerment',
-  'Education & Learning',
-  'Health & Wellness',
-  'Science, IT & Communications',
-  'Housing & Shelter',
+  'Sports & Culture',
+  'Transport & Infrastructure',
+  'Travel & Tourism',
+  'Utility & Sanitation',
+  'Women and Child',
 ];
 
-const COMMON_STATES = [
-  'Kerala',
-  'All',
-  'Karnataka',
-  'Tamil Nadu',
+const ALL_INDIAN_STATES_UTS = [
+  'Andaman and Nicobar Islands',
   'Andhra Pradesh',
-  'Maharashtra',
-  'Gujarat',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chandigarh',
+  'Chhattisgarh',
+  'Dadra and Nagar Haveli and Daman and Diu',
   'Delhi',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jammu and Kashmir',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Ladakh',
+  'Lakshadweep',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Puducherry',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
   'Uttar Pradesh',
+  'Uttarakhand',
   'West Bengal',
+];
+
+const ALL_INDIAN_MINISTRIES = [
+  'Ministry Of Agriculture and Farmers Welfare',
+  'Ministry Of Ayush',
+  'Ministry Of Chemicals And Fertilizers',
+  'Ministry Of Commerce And Industry',
+  'Ministry Of Communication',
+  'Ministry Of Consumer Affairs, Food And Public Distribution',
+  'Ministry Of Culture',
+  'Ministry Of Defence',
+  'Ministry Of Development Of North Eastern Region',
+  'Ministry Of Earth Sciences',
+  'Ministry Of Environment,forests and climate change',
+  'Ministry Of External Affairs',
+  'Ministry Of Finance',
+  'Ministry Of Health & Family Welfare',
+  'Ministry Of Home Affairs',
+  'Ministry Of Housing & Urban Affairs',
+  'Ministry Of Information And Broadcasting',
+  'Ministry Of Jal Shakti',
+  'Ministry Of Labour and Employment',
+  'Ministry Of Law and Justice',
+  'Ministry Of Micro, Small and Medium Enterprises',
+  'Ministry Of Mines',
+  'Ministry Of Minority Affairs',
+  'Ministry Of New and Renewable Energy',
+  'Ministry Of Panchayati Raj',
+  'Ministry Of Personnel, Public Grievances And Pensions',
+  'Ministry Of Petroleum and Natural Gas',
+  'Ministry Of Power',
+  'Ministry Of Railways',
+  'Ministry Of Road Transport & Highways',
+  'Ministry Of Rural Development',
+  'Ministry Of Science And Technology',
+  'Ministry Of Skill Development And Entrepreneurship',
+  'Ministry Of Social Justice and Empowerment',
+  'Ministry Of Statistics and Programme Implementation',
+  'Ministry Of Steel',
+  'Ministry Of Textiles',
+  'Ministry Of Tourism',
+  'Ministry Of Tribal Affairs',
+  'Ministry Of Water Resources,River Development & Ganga Rejuvenation',
+  'Ministry Of Youth Affairs & Sports',
+  'Ministry of Corporate Affairs',
+  'Ministry of Education',
+  'Ministry of Electronics and Information Technology',
+  'Ministry of Fisheries,Animal Husbandry and Dairying',
+  'Ministry of Food Processing Industries',
+  'Ministry of Heavy Industries',
+  'Ministry of Ports,Shipping and Waterways',
+  'Ministry of Women and Child Development',
+  'NITI Aayog (National Institution for Transforming India)',
 ];
 
 export function SchemeFilters({
@@ -51,11 +140,15 @@ export function SchemeFilters({
   isLoading = false,
 }: SchemeFiltersProps) {
   const mergedCategories = Array.from(
-    new Set([...categories, ...COMMON_MYSCHEME_CATEGORIES])
-  ).sort();
+    new Set([...ALL_MYSCHEME_CATEGORIES, ...categories])
+  ).filter(Boolean).sort();
 
   const mergedStates = Array.from(
-    new Set([...states, ...COMMON_STATES])
+    new Set([...ALL_INDIAN_STATES_UTS, ...states])
+  ).filter(Boolean).sort();
+
+  const mergedMinistries = Array.from(
+    new Set([...ALL_INDIAN_MINISTRIES, ...ministries])
   ).filter(Boolean).sort();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {

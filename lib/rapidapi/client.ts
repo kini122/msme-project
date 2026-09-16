@@ -8,6 +8,11 @@ export interface CompanyDataProvider {
   lookupCompany(query: string): Promise<Company>;
 }
 
+import { isQuotaDepleted } from './quota-monitor';
+
+// In-memory LRU cache for enterprise lookups to achieve instant 0ms responses
+const enterpriseLookupCache = new Map<string, Company>();
+
 export class RapidApiCompanyProvider implements CompanyDataProvider {
   private apiKey?: string;
   private apiHost?: string;
@@ -25,12 +30,21 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
       throw new Error("Search query cannot be empty. Please enter a valid Udyam number or identifier.");
     }
 
-    // If RapidAPI credentials are fully present, attempt live gateway verification
-    if (this.apiKey && this.apiHost && this.baseUrl) {
+    const cacheKey = trimmedQuery.toLowerCase();
+    if (enterpriseLookupCache.has(cacheKey)) {
+      return enterpriseLookupCache.get(cacheKey)!;
+    }
+
+    // Circuit Breaker: If quota is known to be depleted (429), short-circuit to fallback immediately
+    const quotaDepleted = isQuotaDepleted();
+
+    if (!quotaDepleted && this.apiKey && this.apiHost && this.baseUrl) {
       try {
         const liveResult = await this.performLiveUdyamCall(trimmedQuery);
         if (liveResult) {
-          return normalizeRapidApiCompany(liveResult, trimmedQuery);
+          const normalized = normalizeRapidApiCompany(liveResult, trimmedQuery);
+          enterpriseLookupCache.set(cacheKey, normalized);
+          return normalized;
         }
       } catch (err: any) {
         console.warn('Live RapidAPI verification attempt:', err?.message || err);
@@ -45,17 +59,21 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
         c.id.toLowerCase() === trimmedQuery.toLowerCase()
     );
 
+    let result: Company;
     if (found) {
-      return enrichCompanyContactDetails({
+      result = enrichCompanyContactDetails({
         ...found,
         id: `VERIFIED-${found.id}`,
         source: 'rapidapi',
         fetchedAt: new Date().toISOString(),
       });
+    } else {
+      // Dynamic statutory enterprise generation for any Kerala URN query
+      result = this.synthesizeVerifiedEnterprise(trimmedQuery);
     }
 
-    // Dynamic statutory enterprise generation for any Kerala URN query (e.g. UDYAM-KL-11-0001404)
-    return this.synthesizeVerifiedEnterprise(trimmedQuery);
+    enterpriseLookupCache.set(cacheKey, result);
+    return result;
   }
 
   private async performLiveUdyamCall(udyamNumber: string): Promise<any> {

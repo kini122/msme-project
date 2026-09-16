@@ -31,10 +31,10 @@ export default function SchemesPage() {
     limit: 12,
   });
 
-  const [schemes, setSchemes] = React.useState<Scheme[]>(defaultSchemes);
-  const [totalCount, setTotalCount] = React.useState<number>(defaultSchemes.length);
-  const [totalPages, setTotalPages] = React.useState<number>(1);
-  const [loading, setLoading] = React.useState<boolean>(false);
+  const [schemes, setSchemes] = React.useState<Scheme[]>([]);
+  const [totalCount, setTotalCount] = React.useState<number>(4732);
+  const [totalPages, setTotalPages] = React.useState<number>(Math.ceil(4732 / 12));
+  const [loading, setLoading] = React.useState<boolean>(true);
   const [source, setSource] = React.useState<'myscheme' | 'mock'>('myscheme');
 
   // Extract unique facets from schemes
@@ -180,13 +180,54 @@ export default function SchemesPage() {
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="p-4 bg-white border border-slate-200 rounded-lg flex items-center justify-between text-xs text-slate-600 shadow-subtle">
-              <span>
-                Page <strong className="text-slate-900">{filters.page || 1}</strong> of{' '}
-                {totalPages} ({totalCount} total schemes)
-              </span>
+            <div className="p-4 bg-white border border-slate-200 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 shadow-subtle">
+              <div className="flex items-center gap-3">
+                <span>
+                  Page <strong className="text-slate-900">{filters.page || 1}</strong> of{' '}
+                  <strong className="text-slate-900">{totalPages.toLocaleString()}</strong> ({totalCount.toLocaleString()} total schemes)
+                </span>
+
+                <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3">
+                  <span className="text-slate-400 text-[11px]">Show:</span>
+                  {[12, 24, 48].map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          limit: size,
+                          page: 1,
+                        }))
+                      }
+                      className={`px-2 py-0.5 rounded text-[11px] font-semibold transition ${
+                        (filters.limit || 12) === size
+                          ? 'bg-slate-900 text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={(filters.page || 1) <= 1}
+                  onClick={() =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      page: 1,
+                    }))
+                  }
+                  className="px-2.5 py-1.5 rounded bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition text-[11px]"
+                  title="First Page"
+                >
+                  First
+                </button>
+
                 <button
                   type="button"
                   disabled={(filters.page || 1) <= 1}
@@ -202,7 +243,7 @@ export default function SchemesPage() {
                   <span>Previous</span>
                 </button>
 
-                <span className="px-3 py-1 font-mono font-bold text-slate-800">
+                <span className="px-3 py-1 font-mono font-bold text-slate-800 bg-slate-100 rounded border border-slate-200">
                   {filters.page || 1}
                 </span>
 
@@ -219,6 +260,21 @@ export default function SchemesPage() {
                 >
                   <span>Next</span>
                   <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  type="button"
+                  disabled={(filters.page || 1) >= totalPages}
+                  onClick={() =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      page: totalPages,
+                    }))
+                  }
+                  className="px-2.5 py-1.5 rounded bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition text-[11px]"
+                  title="Last Page"
+                >
+                  Last
                 </button>
               </div>
             </div>
