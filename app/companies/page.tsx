@@ -30,15 +30,6 @@ function CompanyListContent() {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // Extract unique sectors and states dynamically from active registry
-  const sectors = React.useMemo(() => {
-    const set = new Set<string>();
-    companies.forEach((c) => {
-      if (c.sector) set.add(c.sector);
-    });
-    return Array.from(set).sort();
-  }, [companies]);
-
   const states = React.useMemo(() => {
     const set = new Set<string>();
     companies.forEach((c) => {
@@ -62,6 +53,20 @@ function CompanyListContent() {
     }
   }, [initialClassification]);
 
+  const handleFilterChange = React.useCallback(
+    (newFilters: CompanyFilterState) => {
+      const districtChanged = newFilters.district !== filters.district;
+      const classChanged = newFilters.classification !== filters.classification;
+      setFilters(newFilters);
+
+      // If district or classification changed, automatically pull 10 real units for that selection
+      if (districtChanged || classChanged) {
+        fetchLiveCompanyBatch(newFilters, 10);
+      }
+    },
+    [filters, fetchLiveCompanyBatch]
+  );
+
   const filteredCompanies = React.useMemo(() => {
     return filterCompanies(companies, filters);
   }, [companies, filters]);
@@ -74,7 +79,7 @@ function CompanyListContent() {
   };
 
   const handleLiveFetch = async () => {
-    await fetchLiveCompanyBatch(filters, 12);
+    await fetchLiveCompanyBatch(filters, 10);
   };
 
   const handleCreateCompany = (newComp: Company) => {
@@ -85,13 +90,13 @@ function CompanyListContent() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Kerala Company Master List"
-        description="Comprehensive statutory directory of registered Kerala MSMEs with financial scale, industrial district jurisdiction, and active ministerial scheme matches."
+        title="Kerala MSME Registered Units"
+        description="Official directory of registered MSME units in Kerala pulled directly from the Open Government Data (data.gov.in) portal with real-time scheme eligibility evaluation."
         breadcrumbs={[
           { label: 'Overview', href: '/overview' },
           { label: 'Company Master List' },
         ]}
-        source="mock"
+        source="data.gov.in"
         actions={
           isAdmin ? (
             <div className="flex items-center gap-2">
@@ -110,8 +115,7 @@ function CompanyListContent() {
 
       <CompanyFilters
         filters={filters}
-        onFilterChange={setFilters}
-        sectors={sectors}
+        onFilterChange={handleFilterChange}
         states={states}
         totalCount={companies.length}
         filteredCount={filteredCompanies.length}

@@ -31,7 +31,7 @@ export interface Company {
   state?: string;
   district?: string;
   address?: string;
-  source: "mock" | "rapidapi" | "custom";
+  source: "mock" | "rapidapi" | "data.gov.in" | "myscheme" | "custom";
   fetchedAt?: string;
 
   // Statutory Contacts & Identity Fields (only populated if confirmed)

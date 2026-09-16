@@ -550,7 +550,7 @@ export function CompanyFormModal({
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-slate-800">
-                      Annual Audited Turnover (₹)
+                      Annual Reported Turnover (₹)
                     </label>
                     <span className="font-mono text-xs font-bold text-blue-700">
                       {formatINR(turnover)}

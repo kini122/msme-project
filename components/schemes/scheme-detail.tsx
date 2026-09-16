@@ -5,18 +5,14 @@ import { Company } from '@/types/company';
 import { SchemeMatch } from '@/types/matching';
 import { MatchStatusBadge } from '@/components/matching/match-status';
 import { DisclaimerBanner } from '@/components/ui/disclaimer-banner';
-import { formatINR } from '@/lib/formatters/currency';
 import {
   Building,
   ExternalLink,
-  Users,
   MapPin,
-  Tag,
-  Calendar,
   Globe2,
   ChevronRight,
-  ShieldCheck,
   AlertCircle,
+  Layers,
 } from 'lucide-react';
 
 interface SchemeDetailProps {
@@ -113,7 +109,7 @@ export function SchemeDetail({ scheme, matchingCompanies }: SchemeDetailProps) {
             Statutory Eligibility Rules Matrix
           </h4>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
             <div className="p-3 bg-slate-50 border border-slate-200 rounded">
               <span className="text-slate-400 block mb-1">Target Beneficiary:</span>
               <span className="font-semibold text-slate-800">
@@ -129,19 +125,11 @@ export function SchemeDetail({ scheme, matchingCompanies }: SchemeDetailProps) {
             </div>
 
             <div className="p-3 bg-slate-50 border border-slate-200 rounded">
-              <span className="text-slate-400 block mb-1">Territory / State:</span>
+              <span className="text-slate-400 block mb-1">Territory / Jurisdiction:</span>
               <span className="font-semibold text-slate-800 flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5 text-slate-400" />
                 {scheme.states.length === 0 ? 'Pan-India (All States/UTs)' : scheme.states.join(', ')}
               </span>
-            </div>
-
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded">
-              <span className="text-slate-400 block mb-1">Thresholds & Caps:</span>
-              <div className="space-y-0.5 font-mono font-semibold text-slate-800">
-                <div>Turnover: {scheme.maxTurnover ? `≤ ${formatINR(scheme.maxTurnover)}` : 'As per myScheme guidelines'}</div>
-                <div>P&M Inv: {scheme.maxInvestment ? `≤ ${formatINR(scheme.maxInvestment)}` : 'Standard MSME ceiling'}</div>
-              </div>
             </div>
           </div>
         </div>
@@ -153,14 +141,14 @@ export function SchemeDetail({ scheme, matchingCompanies }: SchemeDetailProps) {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-bold font-heading text-slate-900">
-                Qualifying Candidate Enterprises in Master Dataset
+                Qualifying Registered Enterprises
               </h3>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-emerald-100 text-emerald-800">
                 {matchingCompanies.length} Units Eligible
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Enterprises from the loaded 30-company roster matching classification, sector, state, and threshold parameters
+              Enterprises from the live government registry matching industry activity and regional mandate
             </p>
           </div>
         </div>
@@ -184,9 +172,8 @@ export function SchemeDetail({ scheme, matchingCompanies }: SchemeDetailProps) {
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                     <th className="py-3 px-4">Enterprise Name & URN</th>
-                    <th className="py-3 px-3">Class</th>
-                    <th className="py-3 px-3">Sector & State</th>
-                    <th className="py-3 px-3 text-right">Turnover</th>
+                    <th className="py-3 px-3">District & Location</th>
+                    <th className="py-3 px-3">NIC Activity</th>
                     <th className="py-3 px-3 text-center">Match Status</th>
                     <th className="py-3 px-4 text-right">Action</th>
                   </tr>
@@ -208,18 +195,14 @@ export function SchemeDetail({ scheme, matchingCompanies }: SchemeDetailProps) {
                       </td>
 
                       <td className="py-3 px-3">
-                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
-                          {company.classification || 'N/A'}
-                        </span>
+                        <div className="font-medium text-slate-800">{company.district || 'Kerala'}</div>
+                        <div className="text-[11px] text-slate-500">{company.pinCode ? `PIN: ${company.pinCode}` : 'Kerala'}</div>
                       </td>
 
-                      <td className="py-3 px-3">
-                        <div className="font-medium text-slate-800">{company.sector}</div>
-                        <div className="text-[11px] text-slate-500">{company.state}</div>
-                      </td>
-
-                      <td className="py-3 px-3 text-right font-mono font-bold text-slate-900">
-                        {formatINR(company.turnover)}
+                      <td className="py-3 px-3 max-w-xs">
+                        <div className="font-mono text-xs text-slate-800 truncate" title={company.nicCode}>
+                          {company.nicCode || company.sector || 'MSME Unit'}
+                        </div>
                       </td>
 
                       <td className="py-3 px-3 text-center">
@@ -229,7 +212,7 @@ export function SchemeDetail({ scheme, matchingCompanies }: SchemeDetailProps) {
                       <td className="py-3 px-4 text-right">
                         <Link
                           href={`/companies/${company.id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-slate-100 text-slate-700 hover:bg-blue-600 hover:text-white font-medium text-xs transition"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-slate-100 text-slate-700 hover:bg-slate-900 hover:text-white font-medium text-xs transition"
                         >
                           <span>Profile</span>
                           <ChevronRight className="w-3 h-3" />

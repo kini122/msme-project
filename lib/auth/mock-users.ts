@@ -11,7 +11,7 @@ export const PREDEFINED_USERS: PredefinedUser[] = [
     passwordHash: 'Admin@2026',
     name: 'CA Rajesh Rangamani',
     role: 'admin',
-    designation: 'Managing Partner & Lead Auditor',
+    designation: 'Managing Partner & Practice Lead',
     branch: 'Kochi Head Office',
   },
   {

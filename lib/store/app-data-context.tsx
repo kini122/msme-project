@@ -5,9 +5,10 @@ import { Company, CompanyFilterState } from '@/types/company';
 import { Scheme } from '@/types/scheme';
 import { enrichCompanyContactDetails } from '@/lib/data/company-contacts';
 import initialCompaniesRaw from '@/data/companies.json';
-import initialSchemes from '@/data/schemes.json';
+import richMockSchemes from '@/data/schemes.json';
 
 const initialCompanies: Company[] = (initialCompaniesRaw as Company[]).map(enrichCompanyContactDetails);
+const initialSchemes: Scheme[] = richMockSchemes as Scheme[];
 
 interface AppDataContextType {
   companies: Company[];
@@ -26,29 +27,38 @@ interface AppDataContextType {
 
 const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
 
-const COMPANIES_CACHE_KEY = 'msme_kerala_companies_v2';
-const SCHEMES_CACHE_KEY = 'msme_kerala_schemes_v2';
+const COMPANIES_CACHE_KEY = 'msme_kerala_companies_cache_v5';
+const SCHEMES_CACHE_KEY = 'msme_national_schemes_cache_v4';
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [companies, setCompanies] = useState<Company[]>(initialCompanies);
-  const [schemes, setSchemes] = useState<Scheme[]>(initialSchemes as Scheme[]);
+  const [schemes, setSchemes] = useState<Scheme[]>(initialSchemes);
   const [isFetchingLive, setIsFetchingLive] = useState(false);
   const [lastFetchMessage, setLastFetchMessage] = useState<string | null>(null);
 
-  // Load cached records on client mount
+  // Load and merge cached records on client mount
   useEffect(() => {
     try {
-      // Clear legacy caches that had non-Kerala policies or raw test items
+      // Clear legacy temporary caches
       localStorage.removeItem('msme_unified_schemes_cache');
       localStorage.removeItem('msme_unified_companies_cache');
+      localStorage.removeItem('msme_kerala_schemes_v2');
 
       const cachedCompStr = localStorage.getItem(COMPANIES_CACHE_KEY);
       if (cachedCompStr) {
         const cachedComp: Company[] = JSON.parse(cachedCompStr);
         if (Array.isArray(cachedComp) && cachedComp.length > 0) {
           const map = new Map<string, Company>();
-          initialCompanies.forEach((c) => map.set(c.id, c));
-          cachedComp.forEach((c) => map.set(c.id, c));
+          // Seed defaults
+          initialCompanies.forEach((c) => {
+            const key = c.udyamNumber || c.id || c.companyName;
+            map.set(key, c);
+          });
+          // Merge cached live fetched entries
+          cachedComp.forEach((c) => {
+            const key = c.udyamNumber || c.id || c.companyName;
+            map.set(key, c);
+          });
           setCompanies(Array.from(map.values()));
         }
       }
@@ -58,10 +68,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         const cachedSch: Scheme[] = JSON.parse(cachedSchStr);
         if (Array.isArray(cachedSch) && cachedSch.length > 0) {
           const map = new Map<string, Scheme>();
-          (initialSchemes as Scheme[]).forEach((s) => map.set(s.id, s));
-          cachedSch
-            .filter((s) => !s.states || s.states.length === 0 || s.states.some((st) => st.toLowerCase() === 'kerala'))
-            .forEach((s) => map.set(s.id, s));
+          initialSchemes.forEach((s) => map.set(s.id || s.slug || '', s));
+          cachedSch.forEach((s) => map.set(s.id || s.slug || '', s));
           setSchemes(Array.from(map.values()));
         }
       }
@@ -72,7 +80,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   const saveCompaniesToStorage = (list: Company[]) => {
     try {
-      localStorage.setItem(COMPANIES_CACHE_KEY, JSON.stringify(list.slice(0, 200)));
+      localStorage.setItem(COMPANIES_CACHE_KEY, JSON.stringify(list.slice(0, 5000)));
     } catch (e) {
       console.warn('Could not save companies to cache:', e);
     }
@@ -83,9 +91,13 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
     setCompanies((prev) => {
       const map = new Map<string, Company>();
-      newItems.forEach((c) => map.set(c.id, c));
       prev.forEach((c) => {
-        if (!map.has(c.id)) map.set(c.id, c);
+        const key = c.udyamNumber || c.id || c.companyName;
+        map.set(key, c);
+      });
+      newItems.forEach((c) => {
+        const key = c.udyamNumber || c.id || c.companyName;
+        map.set(key, c);
       });
 
       const updated = Array.from(map.values());
@@ -135,7 +147,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
       const updated = Array.from(map.values());
       try {
-        localStorage.setItem(SCHEMES_CACHE_KEY, JSON.stringify(updated.slice(0, 200)));
+        localStorage.setItem(SCHEMES_CACHE_KEY, JSON.stringify(updated.slice(0, 5000)));
       } catch (e) {
         console.warn('Could not save schemes to cache:', e);
       }
@@ -164,25 +176,41 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         const data = await response.json();
 
         if (data.success && Array.isArray(data.companies) && data.companies.length > 0) {
-          addCompanies(data.companies);
-          const msg = `Fetched & verified ${data.companies.length} enterprise records for ${
-            filters.district && filters.district !== 'ALL'
-              ? `${filters.district}, `
-              : ''
-          }Kerala.`;
+          let updatedTotal = 0;
+          setCompanies((prev) => {
+            const map = new Map<string, Company>();
+            // Retain all existing cached companies
+            prev.forEach((c) => {
+              const key = c.udyamNumber || c.id || c.companyName;
+              map.set(key, c);
+            });
+            // Merge in newly fetched live records
+            data.companies.forEach((c: Company) => {
+              const key = c.udyamNumber || c.id || c.companyName;
+              map.set(key, c);
+            });
+
+            const merged = Array.from(map.values());
+            updatedTotal = merged.length;
+            saveCompaniesToStorage(merged);
+            return merged;
+          });
+
+          const distLabel = filters.district && filters.district !== 'ALL' ? `${filters.district} District` : 'Kerala';
+          const msg = `Fetched & cached ${data.companies.length} authentic records for ${distLabel} in memory. Total cached: ${updatedTotal || (companies.length + data.companies.length)} enterprises active across the portal.`;
           setLastFetchMessage(msg);
           return { count: data.companies.length };
         } else {
           throw new Error('No new enterprise records returned from verification gateway.');
         }
       } catch (err: any) {
-        setLastFetchMessage(`Verification notice: ${err?.message || 'Failed to pull live batch'}`);
+        setLastFetchMessage(`Notice: ${err?.message || 'Failed to pull live batch'}`);
         return { count: 0 };
       } finally {
         setIsFetchingLive(false);
       }
     },
-    [addCompanies]
+    [companies.length]
   );
 
   const clearNotification = useCallback(() => {
@@ -199,7 +227,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       console.warn(e);
     }
     setCompanies(initialCompanies as Company[]);
-    setSchemes(initialSchemes as Scheme[]);
+    setSchemes(initialSchemes);
     setLastFetchMessage('Registry reset to default initial state.');
   }, []);
 

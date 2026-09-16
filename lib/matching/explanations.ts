@@ -57,7 +57,7 @@ export function generateExplanation(
         if (company.turnover != null) {
           return `Reported turnover ${formatINR(company.turnover)} complies with threshold (Max: ${formatINR(scheme.maxTurnover)}).`;
         }
-        return `Turnover pending audit entry. Enterprise verified as ${company.classification || 'MSME'} class (statutory ceiling ≤ ${company.classification === 'Micro' ? '₹5 Cr' : company.classification === 'Small' ? '₹50 Cr' : '₹250 Cr'}).`;
+        return `Turnover pending verification entry. Enterprise verified as ${company.classification || 'MSME'} class (statutory ceiling ≤ ${company.classification === 'Micro' ? '₹5 Cr' : company.classification === 'Small' ? '₹50 Cr' : '₹250 Cr'}).`;
       }
       if (state === 'fail') {
         if (scheme.maxTurnover && company.turnover && company.turnover > scheme.maxTurnover) {
@@ -68,7 +68,7 @@ export function generateExplanation(
         }
         return 'Turnover does not meet scheme financial parameters.';
       }
-      return 'Turnover pending audit entry. Use "Edit / Enrich KPIs" to input client financial figures.';
+      return 'Turnover pending verification entry. Use "Edit / Enrich KPIs" to input client financial figures.';
 
     case 'investment':
       if (state === 'pass') {
@@ -78,7 +78,7 @@ export function generateExplanation(
         if (company.investment != null) {
           return `Investment ${formatINR(company.investment)} is within scheme limits (Max: ${formatINR(scheme.maxInvestment)}).`;
         }
-        return `P&M investment pending audit entry. Enterprise verified as ${company.classification || 'MSME'} class (statutory ceiling ≤ ${company.classification === 'Micro' ? '₹1 Cr' : company.classification === 'Small' ? '₹10 Cr' : '₹50 Cr'}).`;
+        return `P&M investment pending verification entry. Enterprise verified as ${company.classification || 'MSME'} class (statutory ceiling ≤ ${company.classification === 'Micro' ? '₹1 Cr' : company.classification === 'Small' ? '₹10 Cr' : '₹50 Cr'}).`;
       }
       if (state === 'fail') {
         if (scheme.maxInvestment && company.investment && company.investment > scheme.maxInvestment) {
@@ -89,7 +89,7 @@ export function generateExplanation(
         }
         return 'Investment in Plant & Machinery does not meet scheme threshold.';
       }
-      return 'Plant & Machinery investment value pending audit entry.';
+      return 'Plant & Machinery investment value pending verification entry.';
 
     case 'export_kpi':
       if (state === 'pass') {

@@ -63,7 +63,7 @@ export default function SchemesPage() {
   }, [defaultSchemes]);
 
   // Fetch schemes from /api/schemes proxy
-  const fetchSchemes = React.useCallback(async () => {
+  const fetchSchemes = React.useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams();
@@ -75,29 +75,35 @@ export default function SchemesPage() {
       queryParams.set('page', String(filters.page || 1));
       queryParams.set('limit', String(filters.limit || 12));
 
-      const res = await fetch(`/api/schemes?${queryParams.toString()}`);
+      const res = await fetch(`/api/schemes?${queryParams.toString()}`, { signal });
       const data = await res.json();
 
       if (data.success && Array.isArray(data.schemes)) {
         setSchemes(data.schemes);
-        addSchemes(data.schemes); // Cache newly retrieved schemes in unified store
         setTotalCount(data.total || data.schemes.length);
         const limit = filters.limit || 12;
         setTotalPages(Math.ceil((data.total || data.schemes.length) / limit) || 1);
         setSource(data.source === 'live_api' ? 'myscheme' : 'mock');
       }
-    } catch (err) {
-      console.error('Failed to query schemes API:', err);
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Failed to query schemes API:', err);
+      }
     } finally {
       setLoading(false);
     }
-  }, [filters, addSchemes]);
+  }, [filters]);
 
   React.useEffect(() => {
+    const controller = new AbortController();
     const timeout = setTimeout(() => {
-      fetchSchemes();
-    }, 250);
-    return () => clearTimeout(timeout);
+      fetchSchemes(controller.signal);
+    }, 120);
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [fetchSchemes]);
 
   // Compute matching company count for each scheme against all loaded & cached enterprises

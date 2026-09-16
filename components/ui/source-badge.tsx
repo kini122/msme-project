@@ -3,18 +3,18 @@ import { ShieldCheck, Building2, Sparkles } from 'lucide-react';
 import { formatTimestamp } from '@/lib/formatters/date';
 
 interface SourceBadgeProps {
-  source?: 'mock' | 'rapidapi' | 'myscheme' | 'custom';
+  source?: 'mock' | 'rapidapi' | 'data.gov.in' | 'myscheme' | 'custom';
   fetchedAt?: string;
   className?: string;
 }
 
 export function SourceBadge({ source, fetchedAt, className = '' }: SourceBadgeProps) {
-  if (source === 'rapidapi' || source === 'myscheme') {
+  if (source === 'rapidapi' || source === 'data.gov.in' || source === 'myscheme') {
     return (
       <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-xs font-semibold shadow-xs ${className}`}>
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-        <span>Udyam Verified Record</span>
+        <span>data.gov.in Live API</span>
         {fetchedAt && (
           <span className="text-emerald-700/80 border-l border-emerald-200 pl-1.5 text-[11px] font-mono">
             {formatTimestamp(fetchedAt)}

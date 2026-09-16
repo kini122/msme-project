@@ -94,19 +94,19 @@ export function OverviewCharts({
         </div>
 
         {/* Legend */}
-        <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 text-center">
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-3 border-t border-slate-100 text-center">
           {classificationData.map((item) => (
-            <div key={item.name} className="p-1.5 rounded bg-slate-50">
+            <div key={item.name} className="flex-1 min-w-[90px] p-1.5 rounded bg-slate-50 border border-slate-100">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
                 <span
-                  className="w-2 h-2 rounded-full"
+                  className="w-2 h-2 rounded-full shrink-0"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-[11px] font-medium text-slate-600">
+                <span className="text-[11px] font-medium text-slate-600 truncate">
                   {item.name}
                 </span>
               </div>
-              <span className="text-sm font-bold font-mono text-slate-900">
+              <span className="text-sm font-bold font-mono text-slate-900 block">
                 {item.value}
               </span>
             </div>

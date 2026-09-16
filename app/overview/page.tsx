@@ -28,17 +28,24 @@ export default function OverviewPage() {
   const smallCount = companies.filter((c) => c.classification === 'Small').length;
   const mediumCount = companies.filter((c) => c.classification === 'Medium').length;
 
+  const unclassifiedCount = companies.filter(
+    (c) => !c.classification || !['Micro', 'Small', 'Medium'].includes(c.classification)
+  ).length;
+
   // Chart data calculation
   const classificationData = [
     { name: 'Micro', value: microCount, color: '#0284c7' },
     { name: 'Small', value: smallCount, color: '#4f46e5' },
     { name: 'Medium', value: mediumCount, color: '#d97706' },
   ];
+  if (unclassifiedCount > 0) {
+    classificationData.push({ name: 'Registered MSME', value: unclassifiedCount, color: '#10b981' });
+  }
 
   // Sector breakdown aggregation
   const sectorCountMap: Record<string, number> = {};
   for (const c of companies) {
-    const s = c.sector || 'Unclassified';
+    const s = c.sector || 'Commercial MSME';
     sectorCountMap[s] = (sectorCountMap[s] || 0) + 1;
   }
   const sectorData = Object.entries(sectorCountMap)
@@ -49,7 +56,7 @@ export default function OverviewPage() {
   // District breakdown aggregation
   const districtCountMap: Record<string, number> = {};
   for (const c of companies) {
-    const d = c.district || 'Unspecified';
+    const d = c.district || 'Kerala';
     districtCountMap[d] = (districtCountMap[d] || 0) + 1;
   }
   const districtData = Object.entries(districtCountMap)
@@ -63,7 +70,7 @@ export default function OverviewPage() {
       <PageHeader
         title="Kerala MSME Executive Snapshot"
         description="Executive statutory dashboard evaluating registered Kerala MSME cohort distributions, industrial sector concentrations across all 14 districts, and ministerial scheme capacity."
-        source="mock"
+        source="data.gov.in"
         actions={
           isAdmin ? (
             <div className="flex items-center gap-2">
@@ -92,7 +99,7 @@ export default function OverviewPage() {
           title="Registered Enterprises"
           value={totalCompanies}
           subtitle="Kerala Statutory Registry"
-          badge="100% Audited"
+          badge="100% Verified"
           icon={Building2}
           colorScheme="slate"
           href="/companies"
@@ -150,7 +157,7 @@ export default function OverviewPage() {
               Kerala Company Master List &rarr;
             </h4>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Browse, filter by Kerala sector and district, sort audited financials, and inspect individual enterprise profiles.
+              Browse, filter by Kerala sector and district, sort verified enterprise records, and inspect individual enterprise profiles.
             </p>
           </div>
           <span className="text-[11px] font-semibold text-blue-600 mt-3 pt-3 border-t border-slate-100 flex items-center gap-1">

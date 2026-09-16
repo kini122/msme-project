@@ -2,8 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    cpus: 1,
-    workerThreads: false,
+    optimizePackageImports: ['lucide-react', 'recharts', 'date-fns'],
   },
   async redirects() {
     return [
@@ -17,3 +16,4 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { CompanyFilterState } from '@/types/company';
-import { KERALA_DISTRICTS, KERALA_SECTORS } from '@/lib/data/districts';
+import { KERALA_DISTRICTS } from '@/lib/data/districts';
 import { useAuth } from '@/lib/auth/auth-context';
 import {
   Search,
@@ -18,7 +18,6 @@ import {
 interface CompanyFiltersProps {
   filters: CompanyFilterState;
   onFilterChange: (filters: CompanyFilterState) => void;
-  sectors: string[];
   states?: string[];
   totalCount: number;
   filteredCount: number;
@@ -32,7 +31,6 @@ interface CompanyFiltersProps {
 export function CompanyFilters({
   filters,
   onFilterChange,
-  sectors,
   totalCount,
   filteredCount,
   onExportCSV,
@@ -49,10 +47,6 @@ export function CompanyFilters({
 
   const handleClassificationClick = (classification: string) => {
     onFilterChange({ ...filters, classification });
-  };
-
-  const handleSectorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFilterChange({ ...filters, sector: e.target.value });
   };
 
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -72,14 +66,7 @@ export function CompanyFilters({
   const isFiltered =
     filters.search !== '' ||
     filters.classification !== 'ALL' ||
-    filters.sector !== 'ALL' ||
     (filters.district && filters.district !== 'ALL');
-
-  // Combined sector list
-  const sectorOptions = React.useMemo(() => {
-    const set = new Set([...KERALA_SECTORS, ...sectors]);
-    return Array.from(set).sort();
-  }, [sectors]);
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-subtle mb-6 space-y-4">
@@ -111,7 +98,7 @@ export function CompanyFilters({
             type="text"
             value={filters.search}
             onChange={handleSearchChange}
-            placeholder="Search by enterprise name, URN, sector, or Kerala district..."
+            placeholder="Search by enterprise name, URN, or Kerala district..."
             className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
           />
         </div>
@@ -124,17 +111,17 @@ export function CompanyFilters({
               disabled={isFetchingLive}
               onClick={onFetchLive}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-semibold transition shadow-xs disabled:opacity-60 disabled:cursor-not-allowed"
-              title="Pull fresh verified records from gateway for Kerala districts"
+              title="Pull 10 fresh verified records from gateway for the selected Kerala district"
             >
               {isFetchingLive ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                  <span>Pulling Live Data...</span>
+                  <span>Pulling 10 Live Records...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Fetch Live Records</span>
+                  <span>Fetch 10 Live Records</span>
                 </>
               )}
             </button>
@@ -165,86 +152,40 @@ export function CompanyFilters({
         </div>
       </div>
 
-      {/* Filter Facets Grid */}
-      <div className="space-y-3 pt-3 border-t border-slate-100 text-xs">
-        {/* Classification Cohorts */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase mr-1">
-            Classification:
+      {/* Filter Facets Row */}
+      <div className="flex items-center justify-between gap-4 pt-3 border-t border-slate-100 text-xs flex-wrap">
+        {/* Kerala District Select */}
+        <div className="flex items-center gap-2 flex-1 min-w-[240px] max-w-md">
+          <label className="text-[10px] font-semibold text-slate-400 uppercase shrink-0 flex items-center gap-1">
+            <MapPin className="w-3 h-3 text-slate-400" />
+            District Jurisdiction:
+          </label>
+          <select
+            value={filters.district || 'ALL'}
+            onChange={handleDistrictChange}
+            className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:border-blue-500 font-medium"
+          >
+            <option value="ALL">All 14 Kerala Districts (1,022,346 Units)</option>
+            {KERALA_DISTRICTS.map((d) => (
+              <option key={d} value={d}>
+                {d} District
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Record Counter */}
+        <div className="text-[11px] text-slate-500">
+          <span>
+            Showing <strong className="text-slate-800">{filteredCount}</strong> of{' '}
+            {totalCount} live government MSME records
           </span>
-          {['ALL', 'Micro', 'Small', 'Medium'].map((tier) => {
-            const isSelected = filters.classification === tier;
-            return (
-              <button
-                key={tier}
-                type="button"
-                onClick={() => handleClassificationClick(tier)}
-                className={`px-3 py-1 rounded text-xs font-semibold transition ${
-                  isSelected
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {tier === 'ALL' ? 'All Classes' : tier}
-              </button>
-            );
-          })}
+          {isFiltered && (
+            <span className="text-blue-600 font-semibold ml-2">&bull; Filter Active</span>
+          )}
         </div>
-
-        {/* Sector and Kerala District Selects */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-          {/* Sector Select */}
-          <div>
-            <label className="text-[10px] font-semibold text-slate-400 uppercase block mb-1">
-              Kerala Industry Sector:
-            </label>
-            <select
-              value={filters.sector}
-              onChange={handleSectorChange}
-              className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:border-blue-500"
-            >
-              <option value="ALL">All Kerala Sectors</option>
-              {sectorOptions.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* District Select */}
-          <div>
-            <label className="text-[10px] font-semibold text-slate-400 uppercase block mb-1 flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-slate-400" />
-              Kerala District Jurisdiction (14 Districts):
-            </label>
-            <select
-              value={filters.district || 'ALL'}
-              onChange={handleDistrictChange}
-              className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none focus:border-blue-500"
-            >
-              <option value="ALL">All 14 Kerala Districts</option>
-              {KERALA_DISTRICTS.map((d) => (
-                <option key={d} value={d}>
-                  {d} District
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Record Counter & Active Status */}
-      <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100 flex-wrap gap-2">
-        <span>
-          Showing <strong className="text-slate-800">{filteredCount}</strong> of{' '}
-          {totalCount} registered Kerala enterprises
-        </span>
-
-        {isFiltered && (
-          <span className="text-blue-600 font-semibold">&bull; Filter Active</span>
-        )}
       </div>
     </div>
   );
 }
+

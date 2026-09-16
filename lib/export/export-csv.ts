@@ -1,34 +1,30 @@
 import { Company } from '@/types/company';
 
-export function exportCompaniesToCSV(companies: Company[], filename: string = 'msme-companies-export.csv') {
+export function exportCompaniesToCSV(companies: Company[], filename: string = 'kerala-msme-units-export.csv') {
   if (!companies || companies.length === 0) return;
 
   const headers = [
-    'Company Name',
+    'Enterprise Name',
     'Udyam Number',
-    'Classification',
-    'Sector',
-    'State',
     'District',
-    'Investment (INR)',
-    'Turnover (INR)',
-    'NIC Code',
+    'State',
+    'PIN Code',
+    'National Industry Activity (NIC)',
     'Registration Date',
+    'Registered Address',
     'Data Source'
   ];
 
   const rows = companies.map(c => [
     `"${(c.companyName || '').replace(/"/g, '""')}"`,
     `"${c.udyamNumber || ''}"`,
-    `"${c.classification || ''}"`,
-    `"${(c.sector || '').replace(/"/g, '""')}"`,
-    `"${(c.state || '').replace(/"/g, '""')}"`,
     `"${(c.district || '').replace(/"/g, '""')}"`,
-    c.investment ?? '',
-    c.turnover ?? '',
-    `"${(c.nicCode || '').replace(/"/g, '""')}"`,
+    `"${(c.state || 'Kerala').replace(/"/g, '""')}"`,
+    `"${c.pinCode || ''}"`,
+    `"${(c.nicCode || c.sector || '').replace(/"/g, '""')}"`,
     `"${c.registrationDate || ''}"`,
-    `"${c.source}"`
+    `"${(c.address || '').replace(/"/g, '""')}"`,
+    `"${c.source || 'data.gov.in'}"`
   ]);
 
   const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
