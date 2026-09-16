@@ -23,9 +23,10 @@ import {
 } from 'lucide-react';
 
 const SAMPLE_QUERIES = [
-  { label: 'Thriveni Food Processing (Live Kerala)', query: 'UDYAM-KL-11-0001404' },
-  { label: 'Cochin Marine Exports (Live Kerala)', query: 'UDYAM-KL-07-0012934' },
-  { label: 'Malabar Precision IT (Live Kerala)', query: 'UDYAM-KL-03-0045129' },
+  { label: 'choc - O - late CHOCOLATES (Ernakulam)', query: 'UDYAM-KL-07-0013799' },
+  { label: 'M/S SAFA METAL TRADERS (Ernakulam)', query: 'UDYAM-KL-07-0035177' },
+  { label: 'SUPREME NARROW FABRICS (Palakkad)', query: 'UDYAM-KL-08-0052977' },
+  { label: 'MATTATHIL LEATHER HOUSE (Kottayam)', query: 'UDYAM-KL-05-0078641' },
 ];
 
 export default function LiveLookupPage() {
