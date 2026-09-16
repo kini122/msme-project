@@ -19,7 +19,7 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
   constructor() {
     this.apiKey =
       process.env.RAPIDAPI_KEY ||
-      'c081d0d1e4msh8e57497ea26956ap125bdajsnb07ca6e44b10';
+      'eebe971ac1msh4526a0e46b5d691p1377fajsn2fda4e00e04c';
     this.apiHost =
       process.env.RAPIDAPI_HOST ||
       'udyam-aadhaar-verification.p.rapidapi.com';
@@ -39,23 +39,32 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
       return enterpriseLookupCache.get(cacheKey)!;
     }
 
-    // 1. Live RapidAPI Udyam KYC Verification (if query starts with UDYAM or contains registration format)
+    // 1. If query is a statutory Udyam Registration Number (e.g. UDYAM-KL-07-0013799)
     const isUdyamFormat = /^UDYAM-[A-Z]{2}-\d{2}-\d{7}$/i.test(trimmedQuery) || trimmedQuery.toUpperCase().startsWith('UDYAM');
 
-    if (isUdyamFormat && this.apiKey && this.apiHost && this.baseUrl) {
-      try {
-        const liveResult = await this.performLiveUdyamCall(trimmedQuery);
-        if (liveResult) {
-          const normalized = normalizeRapidApiCompany(liveResult, trimmedQuery);
-          enterpriseLookupCache.set(cacheKey, normalized);
-          return normalized;
+    if (isUdyamFormat) {
+      if (this.apiKey && this.apiHost && this.baseUrl) {
+        try {
+          const liveResult = await this.performLiveUdyamCall(trimmedQuery);
+          if (liveResult) {
+            const normalized = normalizeRapidApiCompany(liveResult, trimmedQuery);
+            enterpriseLookupCache.set(cacheKey, normalized);
+            return normalized;
+          }
+        } catch (err: any) {
+          console.warn('Live RapidAPI verification failed:', err?.message || err);
+          throw new Error(
+            `RapidAPI verification error for ${trimmedQuery}: ${err?.message || 'Gateway unreachable'}`
+          );
         }
-      } catch (err: any) {
-        console.warn('Live RapidAPI verification attempt:', err?.message || err);
       }
+
+      throw new Error(
+        `Unable to verify "${trimmedQuery}" against Central Udyam registry. Please verify the URN format and ensure the RapidAPI Gateway credentials are active.`
+      );
     }
 
-    // 2. Query official data.gov.in Kerala MSME gateway for live record match
+    // 2. Query official data.gov.in Kerala MSME gateway by Enterprise Name / PIN / District
     try {
       const dataGov = new DataGovClient();
       const dgCompany = await dataGov.searchSingleEnterprise(trimmedQuery);
@@ -67,10 +76,9 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
       console.warn('Data.gov.in live search attempt:', dgErr?.message || dgErr);
     }
 
-    // 3. Direct lookup in authentic loaded companies dataset
+    // 3. Direct lookup in loaded authentic Kerala dataset by company name
     const found = (mockCompanies as Company[]).find(
       (c) =>
-        (c.udyamNumber && c.udyamNumber.toLowerCase() === trimmedQuery.toLowerCase()) ||
         c.companyName.toLowerCase().includes(trimmedQuery.toLowerCase()) ||
         c.id.toLowerCase() === trimmedQuery.toLowerCase()
     );
@@ -91,15 +99,13 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
       const dataGov = new DataGovClient();
       const res = await dataGov.fetchUdyamCompanies({
         state: 'Kerala',
-        district: isUdyamFormat ? undefined : trimmedQuery,
+        district: trimmedQuery,
         limit: 10,
       });
 
       if (res.companies && res.companies.length > 0) {
         const matched = res.companies.find(
-          (c) =>
-            c.udyamNumber?.toLowerCase() === trimmedQuery.toLowerCase() ||
-            c.companyName.toLowerCase().includes(trimmedQuery.toLowerCase())
+          (c) => c.companyName.toLowerCase().includes(trimmedQuery.toLowerCase())
         ) || res.companies[0];
 
         enterpriseLookupCache.set(cacheKey, matched);
@@ -111,7 +117,7 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
 
     // 5. Strict: If not found in any authentic source, throw informative error
     throw new Error(
-      `No registered MSME record found for "${trimmedQuery}". Please verify the enterprise name or official Udyam Registration Number and try again.`
+      `No registered MSME record found for "${trimmedQuery}". Please verify the enterprise name or official Udyam Registration Number.`
     );
   }
 

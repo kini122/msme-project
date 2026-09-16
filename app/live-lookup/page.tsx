@@ -40,13 +40,10 @@ export default function LiveLookupPage() {
   const [error, setError] = useState<string | null>(null);
   const [liveCompany, setLiveCompany] = useState<Company | null>(null);
 
-  // Load from session storage on mount if available
+  // Fresh lookup state on mount
   React.useEffect(() => {
     try {
-      const saved = sessionStorage.getItem('last_live_company');
-      if (saved) {
-        setLiveCompany(JSON.parse(saved));
-      }
+      sessionStorage.removeItem('last_live_company');
     } catch (e) {
       console.error(e);
     }
