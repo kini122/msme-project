@@ -116,12 +116,63 @@ export class DataGovClient {
       console.warn('Data.gov.in API query error:', e?.message || e);
     }
 
-    // If query timed out or had no filter matches, return verified live dataset
+    // If query timed out or had no filter matches, return empty list
     return {
       companies: [],
       total: 0,
       source: 'data.gov.in',
     };
+  }
+
+  async searchSingleEnterprise(query: string): Promise<Company | null> {
+    const trimmed = query.trim();
+    if (!trimmed) return null;
+
+    const isPin = /^\d{6}$/.test(trimmed);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 9000);
+
+    try {
+      // 1. Try exact EnterpriseName or Pincode filter on data.gov.in
+      let url = `${this.baseUrl}/${this.resourceId}?api-key=${this.apiKey}&format=json&limit=5&filters[State]=KERALA`;
+      if (isPin) {
+        url += `&filters[Pincode]=${encodeURIComponent(trimmed)}`;
+      } else {
+        url += `&filters[EnterpriseName]=${encodeURIComponent(trimmed)}`;
+      }
+
+      const res = await fetch(url, { method: 'GET', signal: controller.signal });
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json.records) && json.records.length > 0) {
+          clearTimeout(timeoutId);
+          return this.normalizeDataGovRecord(json.records[0], 0, 'Kerala');
+        }
+      }
+
+      // 2. If query is a district name, get top record from that district
+      const distMatch = KERALA_DISTRICTS.find(
+        (d) => d.toLowerCase() === trimmed.toLowerCase()
+      );
+      if (distMatch) {
+        const distUrl = `${this.baseUrl}/${this.resourceId}?api-key=${this.apiKey}&format=json&limit=5&filters[State]=KERALA&filters[District]=${distMatch.toUpperCase()}`;
+        const distRes = await fetch(distUrl, { method: 'GET', signal: controller.signal });
+        if (distRes.ok) {
+          const distJson = await distRes.json();
+          if (Array.isArray(distJson.records) && distJson.records.length > 0) {
+            clearTimeout(timeoutId);
+            return this.normalizeDataGovRecord(distJson.records[0], 0, 'Kerala', distMatch);
+          }
+        }
+      }
+
+      clearTimeout(timeoutId);
+      return null;
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      console.warn('data.gov.in single enterprise search failed:', err?.message || err);
+      return null;
+    }
   }
 
   private normalizeDataGovRecord(

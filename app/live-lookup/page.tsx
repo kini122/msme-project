@@ -23,10 +23,12 @@ import {
 } from 'lucide-react';
 
 const SAMPLE_QUERIES = [
-  { label: 'choc - O - late CHOCOLATES (Ernakulam)', query: 'UDYAM-KL-07-0013799' },
-  { label: 'M/S SAFA METAL TRADERS (Ernakulam)', query: 'UDYAM-KL-07-0035177' },
-  { label: 'SUPREME NARROW FABRICS (Palakkad)', query: 'UDYAM-KL-08-0052977' },
-  { label: 'MATTATHIL LEATHER HOUSE (Kottayam)', query: 'UDYAM-KL-05-0078641' },
+  { label: 'KG SOLARINDIA ENGINEERING (Ernakulam)', query: 'KG SOLARINDIA ENGINEERING PRIVATE LIMITED' },
+  { label: 'PARVATHY AGRO MILL (Palakkad)', query: 'PARVATHY AGRO MILL' },
+  { label: 'choc - O - late CHOCOLATES (Ernakulam)', query: 'choc - O - late CHOCOLATES' },
+  { label: 'M/S SAFA METAL TRADERS (Ernakulam)', query: 'M/S SAFA METAL TRADERS' },
+  { label: 'MATTATHIL LEATHER HOUSE (Kottayam)', query: 'MATTATHIL LEATHER HOUSE' },
+  { label: 'Live Central Udyam (URN)', query: 'UDYAM-KL-07-0013799' },
 ];
 
 export default function LiveLookupPage() {
@@ -198,7 +200,7 @@ export default function LiveLookupPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Enter Udyam Registration Number (e.g. UDYAM-KL-11-0001404)..."
+              placeholder="Enter Enterprise Name, PIN code, or Udyam URN (e.g. PARVATHY AGRO MILL or UDYAM-KL-07-0013799)..."
               disabled={loading}
               className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-mono"
             />
