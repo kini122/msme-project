@@ -23,12 +23,12 @@ import {
 } from 'lucide-react';
 
 const SAMPLE_QUERIES = [
-  { label: 'KG SOLARINDIA ENGINEERING (Ernakulam)', query: 'KG SOLARINDIA ENGINEERING PRIVATE LIMITED' },
+  { label: 'Verify URN: UDYAM-KL-09-0000709', query: 'UDYAM-KL-09-0000709' },
+  { label: 'KG SOLARINDIA (Ernakulam)', query: 'KG SOLARINDIA ENGINEERING PRIVATE LIMITED' },
   { label: 'PARVATHY AGRO MILL (Palakkad)', query: 'PARVATHY AGRO MILL' },
   { label: 'choc - O - late CHOCOLATES (Ernakulam)', query: 'choc - O - late CHOCOLATES' },
   { label: 'M/S SAFA METAL TRADERS (Ernakulam)', query: 'M/S SAFA METAL TRADERS' },
   { label: 'MATTATHIL LEATHER HOUSE (Kottayam)', query: 'MATTATHIL LEATHER HOUSE' },
-  { label: 'Live Central Udyam (URN)', query: 'UDYAM-KL-07-0013799' },
 ];
 
 export default function LiveLookupPage() {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { RapidApiCompanyProvider } from '@/lib/rapidapi/client';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 15;
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {

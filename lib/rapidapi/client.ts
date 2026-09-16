@@ -122,8 +122,9 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
   }
 
   private async performLiveUdyamCall(udyamNumber: string): Promise<any> {
+    const cleanUam = udyamNumber.trim().toUpperCase();
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 14000); // 14s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s total timeout
 
     try {
       const taskId = `task-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -133,7 +134,7 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
         task_id: taskId,
         group_id: groupId,
         data: {
-          uam_number: udyamNumber,
+          uam_number: cleanUam,
         },
       };
 
@@ -152,22 +153,30 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
         const errText = await response.text();
         console.warn(`RapidAPI responded with HTTP ${response.status}:`, errText);
         clearTimeout(timeoutId);
-        return null;
+        let parsedErr = `RapidAPI HTTP ${response.status}`;
+        try {
+          const errObj = JSON.parse(errText);
+          parsedErr = errObj.message || errObj.error || parsedErr;
+        } catch {}
+        throw new Error(parsedErr);
       }
 
       const postJson = await response.json();
-      const reqId = postJson?.request_id || postJson?.task_id || taskId;
-
-      if (!reqId) {
+      
+      // If immediate response contains completed result
+      const directItem = Array.isArray(postJson) ? postJson[0] : postJson;
+      if (directItem?.status === 'completed' || directItem?.result) {
         clearTimeout(timeoutId);
         return postJson;
       }
 
-      // Poll task status endpoint (up to 6 times with 1.5s delay)
+      const reqId = postJson?.request_id || postJson?.task_id || postJson?.id || taskId;
+
+      // Poll task status endpoint (up to 10 attempts with 1.2s delay = ~12s polling window)
       const pollUrl = `https://${this.apiHost}/v3/tasks?request_id=${encodeURIComponent(reqId)}`;
 
-      for (let attempt = 0; attempt < 6; attempt++) {
-        await new Promise((r) => setTimeout(r, 1500));
+      for (let attempt = 0; attempt < 10; attempt++) {
+        await new Promise((r) => setTimeout(r, 1200));
 
         try {
           const pollRes = await fetch(pollUrl, {
@@ -183,27 +192,30 @@ export class RapidApiCompanyProvider implements CompanyDataProvider {
             const pollData = await pollRes.json();
             const item = Array.isArray(pollData) ? pollData[0] : pollData;
 
-            if (item?.status === 'completed' && item?.result?.source_output) {
+            if (item?.status === 'completed' || item?.status === 'success' || item?.result) {
               clearTimeout(timeoutId);
               return pollData;
             }
 
             if (item?.status === 'failed') {
-              console.warn('RapidAPI task returned status failed:', item?.message || item?.error);
-              break;
+              clearTimeout(timeoutId);
+              const failMsg = item?.message || item?.error || item?.result?.message || 'Verification task failed on Udyam server';
+              throw new Error(failMsg);
             }
           }
-        } catch (pollErr) {
-          console.warn('Polling retry error:', pollErr);
+        } catch (pollErr: any) {
+          if (pollErr?.message && !pollErr.message.includes('abort')) {
+            console.warn('Polling check error:', pollErr.message);
+          }
         }
       }
 
       clearTimeout(timeoutId);
-      return null;
+      throw new Error(`Verification timed out for ${cleanUam}. The Udyam registry is taking longer than usual to respond.`);
     } catch (err: any) {
       clearTimeout(timeoutId);
       console.warn('Live API request failed:', err?.message || err);
-      return null;
+      throw err;
     }
   }
 }
